@@ -9,6 +9,7 @@ import { Illustration } from '@/shared/components/Illustration';
 import { SpeakButton } from '@/shared/components/SpeakButton';
 import { Body, Button, Caption, Card, Label } from '@/shared/components/ui';
 import type { Mission } from '@/shared/data/greenpathData';
+import { images } from '@/shared/media';
 import {
   demoEvidenceByMission,
   useGreenPath,
@@ -43,7 +44,7 @@ export function MissionDetailScreen({
   const allChecked = steps.length > 0 ? checkedCount === steps.length : true;
   const canAddEvidence = allChecked && !done;
   const canSubmit = canAddEvidence && preview;
-  const evidenceSource = demoEvidenceByMission[mission.id] ?? demoEvidenceByMission.bottles;
+  const evidenceSource = demoEvidenceByMission[mission.id] ?? images.onboardingAction;
 
   const spokenText = useMemo(() => {
     const checklist = steps.map((s, i) => `Step ${i + 1}. ${s.item}.`).join(' ');

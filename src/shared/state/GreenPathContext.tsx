@@ -218,12 +218,17 @@ export function GreenPathProvider({ children }: { children: ReactNode }) {
     // Soft preference: recycling interests surface recycle/cleanup first
     const score = (m: Mission) => {
       let s = 0;
-      if (interests.includes('recycling') && m.illustration === 'recycle') s += 2;
-      if (interests.includes('waste') && m.illustration === 'recycle') s += 2;
+      // Always surface citizen reporting first — core local action
+      if (m.id === 'report-nearby') s += 10;
+      if (interests.includes('recycling') && (m.illustration === 'recycle' || m.illustration === 'plastic'))
+        s += 2;
+      if (interests.includes('waste') && (m.illustration === 'recycle' || m.illustration === 'plastic'))
+        s += 2;
       if (interests.includes('trees') && m.illustration === 'tree') s += 2;
       if (interests.includes('water') && m.illustration === 'water') s += 2;
       if (interests.includes('ocean') && m.illustration === 'water') s += 2;
       if (interests.includes('energy') && m.illustration === 'energy') s += 2;
+      if (interests.includes('agriculture') && m.illustration === 'agriculture') s += 2;
       if (interests.includes('climate') || interests.includes('air')) s += 1;
       if (completedMissionIds.includes(m.id)) s -= 5;
       return s;
@@ -291,9 +296,12 @@ export function useGreenPath() {
 
 /** Demo evidence photo used when user taps Take Photo / Upload (no device camera required). */
 export const demoEvidenceByMission: Record<string, ImageSourcePropType> = {
-  bottles: images.onboardingAction,
-  'water-save': images.onboardingLearn,
-  plant: images.landingHero,
-  cleanup: images.onboardingAction,
-  lights: images.onboardingAi,
+  'report-nearby': images.onboardingAction,
+  'sachet-sort': images.onboardingAction,
+  'refill-day': images.onboardingLearn,
+  'drain-guard': images.onboardingAction,
+  'food-waste-compost': images.onboardingSplash,
+  'share-climate-tip': images.onboardingAi,
+  'tree-care': images.landingHero,
+  'cookstove-safe': images.onboardingAi,
 };

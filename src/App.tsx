@@ -25,6 +25,7 @@ import { MobileShell } from '@/shared/components/MobileShell';
 import { SystemBars } from '@/shared/components/SystemBars';
 import { TabBar } from '@/shared/components/TabBar';
 import type { Lesson, Mission } from '@/shared/data/greenpathData';
+import { missions } from '@/shared/data/greenpathData';
 import { useAppFonts } from '@/shared/hooks/useAppFonts';
 import {
   GreenPathProvider,
@@ -78,6 +79,17 @@ function AppShell() {
     if (action === 'mission') {
       setActiveTab('missions');
       setOverlay({ type: 'mission', mission: filteredMissions[0] });
+      return;
+    }
+    if (action === 'report') {
+      const reportMission =
+        filteredMissions.find((m) => m.id === 'report-nearby') ??
+        missions.find((m) => m.id === 'report-nearby') ??
+        filteredMissions[0];
+      setActiveTab('missions');
+      if (reportMission) {
+        setOverlay({ type: 'mission', mission: reportMission });
+      }
       return;
     }
     if (action === 'voice') {

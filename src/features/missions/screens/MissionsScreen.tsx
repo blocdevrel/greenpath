@@ -10,6 +10,7 @@ import type { Mission } from '@/shared/data/greenpathData';
 import {
   Droplet,
   Flame,
+  Globe,
   Recycle,
   Sprout,
   Trees,
@@ -26,13 +27,14 @@ const missionVisual: Record<
   { Icon: LucideIcon; tint: string; soft: string }
 > = {
   recycle: { Icon: Recycle, tint: '#2E7D32', soft: '#E8F5E9' },
-  plastic: { Icon: Recycle, tint: '#2E7D32', soft: '#E8F5E9' },
+  plastic: { Icon: Recycle, tint: '#0D9488', soft: '#CCFBF1' },
   water: { Icon: Droplet, tint: '#0284C7', soft: '#E0F2FE' },
   tree: { Icon: Trees, tint: '#15803D', soft: '#ECFDF3' },
   agriculture: { Icon: Sprout, tint: '#65A30D', soft: '#F7FEE7' },
   energy: { Icon: Zap, tint: '#CA8A04', soft: '#FEF9C3' },
   solar: { Icon: Zap, tint: '#CA8A04', soft: '#FEF9C3' },
   community: { Icon: Sprout, tint: '#0D9488', soft: '#CCFBF1' },
+  learn: { Icon: Globe, tint: '#2563EB', soft: '#DBEAFE' },
 };
 
 function difficultyTone(level: Mission['difficulty']) {
@@ -89,6 +91,27 @@ export function MissionsScreen({ onOpenMission }: { onOpenMission: (mission: Mis
               label="Done"
             />
           </View>
+
+          <Pressable
+            onPress={() => {
+              const report = open.find((m) => m.id === 'report-nearby') ?? open[0];
+              if (report) onOpenMission(report);
+            }}
+            accessibilityRole="button"
+            accessibilityLabel="Report trash nearby"
+            className="mt-4 flex-row items-center gap-3 rounded-2xl bg-white px-4 py-3.5">
+            <View className="h-10 w-10 items-center justify-center rounded-xl bg-orange-soft"
+              style={{ backgroundColor: '#FFF7ED' }}>
+              <MaterialCommunityIcons name="map-marker-alert" size={22} color="#EA580C" />
+            </View>
+            <View className="min-w-0 flex-1">
+              <Text className="font-sans-bold text-body text-ink">Report Nearby</Text>
+              <Text className="font-sans text-caption text-subtle">
+                Flag trash or a blocked drain around you
+              </Text>
+            </View>
+            <Ionicons name="chevron-forward" size={18} color={colors.muted} />
+          </Pressable>
         </View>
 
         <View className="gap-5 px-5 pb-8 pt-4">

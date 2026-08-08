@@ -25,7 +25,7 @@ export const onboardingPages = [
     id: 'action',
     title: 'Take Climate Action',
     subtitle: 'Complete daily climate missions and make a real impact.',
-    art: images.onboardingAction,
+    art: images.onboardingSplash,
   },
 ] as const;
 
