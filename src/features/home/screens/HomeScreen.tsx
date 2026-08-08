@@ -316,7 +316,7 @@ export function HomeScreen({
                   onPress={() => onAction(action.id)}
                   accessibilityRole="button"
                   accessibilityLabel={(action.title ?? '').replace(/\n/g, ' ')}
-                  className="items-center gap-2 rounded-2xl border border-line bg-card-raised px-2 py-4 active:opacity-90"
+                  className="items-center gap-2 rounded-2xl bg-card px-2 py-4 active:opacity-90"
                   style={{ width: '48%' }}>
                   <View
                     className="h-12 w-12 items-center justify-center rounded-full"

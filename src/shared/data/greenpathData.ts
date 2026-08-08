@@ -17,14 +17,19 @@ export const userProfile = {
 };
 
 export const interests = [
-  { id: 'recycling', label: '♻ Recycling' },
-  { id: 'trees', label: '🌳 Trees' },
-  { id: 'water', label: '💧 Water' },
-  { id: 'energy', label: '⚡ Renewable Energy' },
-  { id: 'agriculture', label: '🌱 Agriculture' },
-  { id: 'climate', label: '🌎 Climate Change' },
-  { id: 'wildlife', label: '🐢 Wildlife' },
+  { id: 'recycling', label: 'Recycling', icon: 'recycle', tint: '#2E7D32', soft: '#E8F5E9' },
+  { id: 'trees', label: 'Trees & Forests', icon: 'trees', tint: '#15803D', soft: '#ECFDF3' },
+  { id: 'water', label: 'Water Conservation', icon: 'droplet', tint: '#0284C7', soft: '#E0F2FE' },
+  { id: 'energy', label: 'Renewable Energy', icon: 'zap', tint: '#CA8A04', soft: '#FEF9C3' },
+  { id: 'agriculture', label: 'Agriculture', icon: 'sprout', tint: '#65A30D', soft: '#F7FEE7' },
+  { id: 'climate', label: 'Climate Change', icon: 'globe', tint: '#2563EB', soft: '#DBEAFE' },
+  { id: 'wildlife', label: 'Wildlife', icon: 'turtle', tint: '#0D9488', soft: '#CCFBF1' },
+  { id: 'air', label: 'Air Pollution', icon: 'factory', tint: '#64748B', soft: '#F1F5F9' },
+  { id: 'ocean', label: 'Ocean Health', icon: 'waves', tint: '#0369A1', soft: '#E0F2FE' },
+  { id: 'waste', label: 'Waste Reduction', icon: 'trash', tint: '#EA580C', soft: '#FFF7ED' },
 ] as const;
+
+export type InterestIcon = (typeof interests)[number]['icon'];
 
 export type Lesson = {
   id: string;
@@ -262,12 +267,72 @@ export const badges = [
 ];
 
 export const leaderboard = [
-  { rank: 1, name: 'Ama Boateng', xp: 4820, you: false },
-  { rank: 2, name: 'Kwame Asante', xp: 4510, you: false },
-  { rank: 3, name: 'Isaac Mensah', xp: 2450, you: true },
-  { rank: 4, name: 'Efua Darko', xp: 2310, you: false },
-  { rank: 5, name: 'Yaw Owusu', xp: 2105, you: false },
-];
+  {
+    rank: 1,
+    name: 'Ama Owusu',
+    shortName: 'Ama',
+    initials: 'AO',
+    xp: 5840,
+    country: 'Ghana',
+    flag: '🇬🇭',
+    delta: 2,
+    avatarColor: '#F97316',
+    avatar: images.avatar1,
+    you: false,
+  },
+  {
+    rank: 2,
+    name: 'Kwame Asante',
+    shortName: 'Kwame',
+    initials: 'KA',
+    xp: 5200,
+    country: 'Ghana',
+    flag: '🇬🇭',
+    delta: -1,
+    avatarColor: '#3B82F6',
+    avatar: images.avatar2,
+    you: false,
+  },
+  {
+    rank: 3,
+    name: 'Fatima Diallo',
+    shortName: 'Fatima',
+    initials: 'FD',
+    xp: 5000,
+    country: 'Nigeria',
+    flag: '🇳🇬',
+    delta: 5,
+    avatarColor: '#EF4444',
+    avatar: images.avatar3,
+    you: false,
+  },
+  {
+    rank: 4,
+    name: 'Kofi Boateng',
+    shortName: 'Kofi',
+    initials: 'KB',
+    xp: 4680,
+    country: 'Ghana',
+    flag: '🇬🇭',
+    delta: 0,
+    avatarColor: '#8B5CF6',
+    avatar: images.avatar4,
+    you: false,
+  },
+  {
+    rank: 5,
+    name: 'Isaac Mensah',
+    shortName: 'Isaac',
+    initials: 'IM',
+    xp: 2450,
+    country: 'Ghana',
+    flag: '🇬🇭',
+    delta: 1,
+    avatarColor: '#2E7D32',
+    avatar: images.avatarIsaac,
+    you: true,
+  },
+] as const;
 
 export const events = [
   {

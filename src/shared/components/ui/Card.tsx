@@ -7,7 +7,7 @@ export type CardTone = 'light' | 'raised' | 'dark' | 'primary' | 'lime' | 'accen
 /** Flat fills only — separation comes from the tint, never a drop shadow. */
 const toneClass: Record<CardTone, string> = {
   light: 'bg-card',
-  raised: 'bg-card-raised border border-line',
+  raised: 'bg-card',
   dark: 'bg-ink-800',
   primary: 'bg-primary',
   lime: 'bg-lime-soft',

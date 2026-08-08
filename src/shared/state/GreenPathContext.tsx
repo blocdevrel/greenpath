@@ -68,6 +68,9 @@ const interestToTopics: Record<string, string[]> = {
   agriculture: ['Sustainable Agriculture'],
   climate: ['Climate Change'],
   wildlife: ['Climate Change', 'Plastic Pollution'],
+  air: ['Climate Change', 'Solar Energy'],
+  ocean: ['Water Conservation', 'Plastic Pollution'],
+  waste: ['Waste Management', 'Plastic Pollution'],
 };
 
 export function GreenPathProvider({ children }: { children: ReactNode }) {
@@ -216,10 +219,12 @@ export function GreenPathProvider({ children }: { children: ReactNode }) {
     const score = (m: Mission) => {
       let s = 0;
       if (interests.includes('recycling') && m.illustration === 'recycle') s += 2;
+      if (interests.includes('waste') && m.illustration === 'recycle') s += 2;
       if (interests.includes('trees') && m.illustration === 'tree') s += 2;
       if (interests.includes('water') && m.illustration === 'water') s += 2;
+      if (interests.includes('ocean') && m.illustration === 'water') s += 2;
       if (interests.includes('energy') && m.illustration === 'energy') s += 2;
-      if (interests.includes('climate')) s += 1;
+      if (interests.includes('climate') || interests.includes('air')) s += 1;
       if (completedMissionIds.includes(m.id)) s -= 5;
       return s;
     };
