@@ -208,6 +208,7 @@ function AppShell() {
               onOpenSettings={() => setOverlay({ type: 'settings' })}
               onOpenAnalytics={() => setOverlay({ type: 'analytics' })}
               onOpenRewards={() => setOverlay({ type: 'rewards' })}
+              onOpenLeaderboard={() => setOverlay({ type: 'leaderboard' })}
             />
           ) : null}
           <TabBar activeTab={activeTab} onTabChange={setActiveTab} />

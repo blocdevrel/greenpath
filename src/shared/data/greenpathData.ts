@@ -272,11 +272,11 @@ export const leaderboard = [
 export const events = [
   {
     id: 'e1',
-    title: 'Accra Tree Planting Day',
-    location: 'Legon Botanical Gardens',
-    date: 'Sat, 12 Apr',
+    title: 'Community Tree Planting Drive',
+    location: 'Accra Botanical Gardens',
+    date: 'Aug 15',
     time: '9:00 AM',
-    participants: 128,
+    participants: 138,
     capacity: 150,
     illustration: 'tree' as const,
     attendees: [
