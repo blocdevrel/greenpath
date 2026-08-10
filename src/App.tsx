@@ -14,6 +14,7 @@ import { QuizScreen } from '@/features/lessons/screens/QuizScreen';
 import { AiVerificationScreen } from '@/features/missions/screens/AiVerificationScreen';
 import { MissionDetailScreen } from '@/features/missions/screens/MissionDetailScreen';
 import { MissionsScreen } from '@/features/missions/screens/MissionsScreen';
+import { ReportNearbyScreen } from '@/features/missions/screens/ReportNearbyScreen';
 import { AnalyticsScreen } from '@/features/profile/screens/AnalyticsScreen';
 import { ProfileScreen } from '@/features/profile/screens/ProfileScreen';
 import { SettingsScreen } from '@/features/profile/screens/SettingsScreen';
@@ -25,7 +26,6 @@ import { MobileShell } from '@/shared/components/MobileShell';
 import { SystemBars } from '@/shared/components/SystemBars';
 import { TabBar } from '@/shared/components/TabBar';
 import type { Lesson, Mission } from '@/shared/data/greenpathData';
-import { missions } from '@/shared/data/greenpathData';
 import { useAppFonts } from '@/shared/hooks/useAppFonts';
 import {
   GreenPathProvider,
@@ -39,6 +39,7 @@ type Overlay =
   | { type: 'quizResults'; insight: QuizInsight }
   | { type: 'mission'; mission: Mission }
   | { type: 'verify'; mission: Mission }
+  | { type: 'report' }
   | { type: 'voice' }
   | { type: 'rewards' }
   | { type: 'leaderboard' }
@@ -72,24 +73,25 @@ function AppShell() {
       setOverlay({ type: 'lesson', lesson: filteredLessons[0] });
       return;
     }
+    if (action === 'leaderboard') {
+      setOverlay({ type: 'leaderboard' });
+      return;
+    }
     if (action === 'quiz') {
       setOverlay({ type: 'quiz' });
       return;
     }
     if (action === 'mission') {
       setActiveTab('missions');
-      setOverlay({ type: 'mission', mission: filteredMissions[0] });
+      const mission = filteredMissions[0];
+      if (mission) {
+        setOverlay({ type: 'mission', mission });
+      }
       return;
     }
     if (action === 'report') {
-      const reportMission =
-        filteredMissions.find((m) => m.id === 'report-nearby') ??
-        missions.find((m) => m.id === 'report-nearby') ??
-        filteredMissions[0];
       setActiveTab('missions');
-      if (reportMission) {
-        setOverlay({ type: 'mission', mission: reportMission });
-      }
+      setOverlay({ type: 'report' });
       return;
     }
     if (action === 'voice') {
@@ -157,6 +159,9 @@ function AppShell() {
         />
       );
     }
+    if (overlay.type === 'report') {
+      return <ReportNearbyScreen onBack={() => setOverlay(null)} />;
+    }
     if (overlay.type === 'verify') {
       return (
         <AiVerificationScreen
@@ -207,6 +212,7 @@ function AppShell() {
           {activeTab === 'missions' ? (
             <MissionsScreen
               onOpenMission={(mission) => setOverlay({ type: 'mission', mission })}
+              onOpenReport={() => setOverlay({ type: 'report' })}
             />
           ) : null}
           {activeTab === 'community' ? (

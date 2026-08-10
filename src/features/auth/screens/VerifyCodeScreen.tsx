@@ -4,6 +4,7 @@ import { Pressable, TextInput, View } from 'react-native';
 
 import { Button, Display, Label, Screen } from '@/shared/components/ui';
 import { colors } from '@/shared/theme/tokens';
+import { webInputReset } from '@/shared/ui/webInputReset';
 
 const CODE_LENGTH = 4;
 
@@ -73,6 +74,7 @@ export function VerifyCodeScreen({
               textAlign="center"
               className="h-full w-full font-sans-extrabold text-title text-ink"
               accessibilityLabel={`Digit ${index + 1}`}
+              style={webInputReset}
             />
           </View>
         ))}

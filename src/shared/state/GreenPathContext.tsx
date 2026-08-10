@@ -11,9 +11,12 @@ import type { ImageSourcePropType } from 'react-native';
 import { images } from '@/shared/media';
 import {
   badges as seedBadges,
+  communityReports as seedReports,
   lessons as seedLessons,
   missions as seedMissions,
   userProfile as seedProfile,
+  type CommunityReport,
+  type CommunityReportKind,
   type Lesson,
   type Mission,
 } from '@/shared/data/greenpathData';
@@ -35,6 +38,18 @@ export type AccessibilityPrefs = {
   notifications: boolean;
 };
 
+export type ReportVote = 'up' | 'down';
+
+export type NewCommunityReportInput = {
+  kind: CommunityReportKind;
+  title: string;
+  caption: string;
+  location: string;
+  latitude: number;
+  longitude: number;
+  photo?: ImageSourcePropType;
+};
+
 type GreenPathState = {
   profile: typeof seedProfile;
   interests: string[];
@@ -43,6 +58,8 @@ type GreenPathState = {
   completedMissionIds: string[];
   unlockedBadgeIds: string[];
   evidenceUri: ImageSourcePropType | null;
+  reports: CommunityReport[];
+  reportVotes: Record<string, ReportVote>;
   lastQuiz: QuizInsight | null;
   celebration: { title: string; subtitle: string; xp: number } | null;
   prefs: AccessibilityPrefs;
@@ -52,6 +69,8 @@ type GreenPathState = {
   submitQuiz: (insight: QuizInsight, xpReward?: number) => void;
   setEvidence: (source: ImageSourcePropType | null) => void;
   completeMission: (mission: Mission, badgeName?: string) => void;
+  submitCommunityReport: (input: NewCommunityReportInput) => void;
+  voteOnReport: (reportId: string, vote: ReportVote) => void;
   clearCelebration: () => void;
   updatePrefs: (patch: Partial<AccessibilityPrefs>) => void;
   filteredLessons: Lesson[];
@@ -87,6 +106,8 @@ export function GreenPathProvider({ children }: { children: ReactNode }) {
     seedBadges.filter((b) => b.unlocked).map((b) => b.id),
   );
   const [evidenceUri, setEvidenceUri] = useState<ImageSourcePropType | null>(null);
+  const [reports, setReports] = useState<CommunityReport[]>(seedReports);
+  const [reportVotes, setReportVotes] = useState<Record<string, ReportVote>>({});
   const [lastQuiz, setLastQuiz] = useState<QuizInsight | null>(null);
   const [celebration, setCelebration] = useState<GreenPathState['celebration']>(null);
   const [prefs, setPrefs] = useState<AccessibilityPrefs>({
@@ -197,6 +218,71 @@ export function GreenPathProvider({ children }: { children: ReactNode }) {
     [addXp],
   );
 
+  const submitCommunityReport = useCallback(
+    (input: NewCommunityReportInput) => {
+      const report: CommunityReport = {
+        id: `r-${Date.now()}`,
+        kind: input.kind,
+        title: input.title,
+        caption: input.caption,
+        location: input.location,
+        latitude: input.latitude,
+        longitude: input.longitude,
+        distance: 'Near you',
+        timeAgo: 'Just now',
+        upvotes: 1,
+        downvotes: 0,
+        author: seedProfile.fullName,
+        authorAvatar: images.avatarIsaac,
+        photo: input.photo ?? images.onboardingAction,
+        you: true,
+      };
+      setReports((list) => [report, ...list]);
+      setReportVotes((votes) => ({ ...votes, [report.id]: 'up' }));
+      setProfile((p) => ({
+        ...p,
+        missionsCompleted: p.missionsCompleted + 1,
+        streak: p.streak + 1,
+      }));
+      addXp(110);
+      setCelebration({
+        title: 'Report posted!',
+        subtitle: 'Neighbours can upvote or downvote this spot.',
+        xp: 110,
+      });
+      setEvidenceUri(null);
+    },
+    [addXp],
+  );
+
+  const voteOnReport = useCallback((reportId: string, vote: ReportVote) => {
+    setReportVotes((votes) => {
+      const previous = votes[reportId];
+      const nextVote = previous === vote ? undefined : vote;
+
+      setReports((list) =>
+        list.map((r) => {
+          if (r.id !== reportId) return r;
+          let upvotes = r.upvotes;
+          let downvotes = r.downvotes;
+
+          if (previous === 'up') upvotes = Math.max(0, upvotes - 1);
+          if (previous === 'down') downvotes = Math.max(0, downvotes - 1);
+          if (nextVote === 'up') upvotes += 1;
+          if (nextVote === 'down') downvotes += 1;
+
+          return { ...r, upvotes, downvotes };
+        }),
+      );
+
+      if (!nextVote) {
+        const { [reportId]: _, ...rest } = votes;
+        return rest;
+      }
+      return { ...votes, [reportId]: nextVote };
+    });
+  }, []);
+
   const clearCelebration = useCallback(() => setCelebration(null), []);
 
   const updatePrefs = useCallback((patch: Partial<AccessibilityPrefs>) => {
@@ -218,8 +304,6 @@ export function GreenPathProvider({ children }: { children: ReactNode }) {
     // Soft preference: recycling interests surface recycle/cleanup first
     const score = (m: Mission) => {
       let s = 0;
-      // Always surface citizen reporting first — core local action
-      if (m.id === 'report-nearby') s += 10;
       if (interests.includes('recycling') && (m.illustration === 'recycle' || m.illustration === 'plastic'))
         s += 2;
       if (interests.includes('waste') && (m.illustration === 'recycle' || m.illustration === 'plastic'))
@@ -245,6 +329,8 @@ export function GreenPathProvider({ children }: { children: ReactNode }) {
       completedMissionIds,
       unlockedBadgeIds,
       evidenceUri,
+      reports,
+      reportVotes,
       lastQuiz,
       celebration,
       prefs,
@@ -254,6 +340,8 @@ export function GreenPathProvider({ children }: { children: ReactNode }) {
       submitQuiz,
       setEvidence,
       completeMission,
+      submitCommunityReport,
+      voteOnReport,
       clearCelebration,
       updatePrefs,
       filteredLessons,
@@ -267,6 +355,8 @@ export function GreenPathProvider({ children }: { children: ReactNode }) {
       completedMissionIds,
       unlockedBadgeIds,
       evidenceUri,
+      reports,
+      reportVotes,
       lastQuiz,
       celebration,
       prefs,
@@ -276,6 +366,8 @@ export function GreenPathProvider({ children }: { children: ReactNode }) {
       submitQuiz,
       setEvidence,
       completeMission,
+      submitCommunityReport,
+      voteOnReport,
       clearCelebration,
       updatePrefs,
       filteredLessons,
@@ -296,7 +388,6 @@ export function useGreenPath() {
 
 /** Demo evidence photo used when user taps Take Photo / Upload (no device camera required). */
 export const demoEvidenceByMission: Record<string, ImageSourcePropType> = {
-  'report-nearby': images.onboardingAction,
   'sachet-sort': images.onboardingAction,
   'refill-day': images.onboardingLearn,
   'drain-guard': images.onboardingAction,

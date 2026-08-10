@@ -2,13 +2,19 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import { TextInput, View, type TextInputProps } from 'react-native';
 
 import { colors } from '@/shared/theme/tokens';
+import { webInputReset } from '@/shared/ui/webInputReset';
 
-type SearchFieldProps = Omit<TextInputProps, 'style'> & {
+type SearchFieldProps = TextInputProps & {
   className?: string;
 };
 
 /** Compact search input used above list/table surfaces. */
-export function SearchField({ className, placeholder = 'Search', ...rest }: SearchFieldProps) {
+export function SearchField({
+  className,
+  placeholder = 'Search',
+  style,
+  ...rest
+}: SearchFieldProps) {
   return (
     <View
       className={`h-12 flex-row items-center gap-2 rounded-md border border-line bg-card-raised px-3 ${className ?? ''}`}>
@@ -21,6 +27,7 @@ export function SearchField({ className, placeholder = 'Search', ...rest }: Sear
         autoCorrect={false}
         autoCapitalize="none"
         clearButtonMode="while-editing"
+        style={[webInputReset, style]}
         {...rest}
       />
     </View>

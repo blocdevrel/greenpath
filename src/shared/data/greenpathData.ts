@@ -176,23 +176,6 @@ export type Mission = {
 
 export const missions: Mission[] = [
   {
-    id: 'report-nearby',
-    title: 'Report trash in your surroundings',
-    description:
-      'Spot illegal dumping, a blocked gutter, or a plastic pile near you. Take a clear photo and note the place (street, school, market). Community reports help map problem spots for cleanups.',
-    xp: 110,
-    difficulty: 'Easy',
-    minutes: 10,
-    impact: 'Maps pollution for local action',
-    illustration: 'community',
-    checklist: [
-      'Find a safe nearby dump, pile, or blocked drain',
-      'Take a clear photo of the problem',
-      'Note the location (area / landmark)',
-      'Submit for review to earn XP',
-    ],
-  },
-  {
     id: 'sachet-sort',
     title: 'Sort sachet & bottle plastics at home',
     description:
@@ -549,6 +532,98 @@ export const weeklyProgress = [
   { day: 'Fri', value: 70 },
   { day: 'Sat', value: 90 },
   { day: 'Sun', value: 55 },
+];
+
+export type CommunityReportKind = 'trash' | 'blocked-drain' | 'dumping';
+
+export type CommunityReport = {
+  id: string;
+  kind: CommunityReportKind;
+  title: string;
+  caption: string;
+  location: string;
+  latitude: number;
+  longitude: number;
+  distance: string;
+  timeAgo: string;
+  upvotes: number;
+  downvotes: number;
+  author: string;
+  authorAvatar: (typeof images)[keyof typeof images];
+  photo: (typeof images)[keyof typeof images];
+  you?: boolean;
+};
+
+/** Mock community reports — photo posts at real Accra spots locals can vote on. */
+export const communityReports: CommunityReport[] = [
+  {
+    id: 'r1',
+    kind: 'blocked-drain',
+    title: 'Blocked gutter after rains',
+    caption:
+      'Plastic sachets and bags clogging the drain by the junction. Flood risk if it rains again.',
+    location: 'Oxford St & Cantonments Rd, Osu',
+    latitude: 5.5580,
+    longitude: -0.1820,
+    distance: '0.4 km',
+    timeAgo: '12m ago',
+    upvotes: 24,
+    downvotes: 2,
+    author: 'Ama Owusu',
+    authorAvatar: images.avatar1,
+    photo: images.onboardingAction,
+  },
+  {
+    id: 'r2',
+    kind: 'trash',
+    title: 'Sachet pile behind kiosk',
+    caption:
+      'Large pile of water sachets behind the shop. Needs a cleanup or Zoomlion pickup.',
+    location: 'Madina Market, Accra',
+    latitude: 5.6831,
+    longitude: -0.1677,
+    distance: '1.2 km',
+    timeAgo: '1h ago',
+    upvotes: 18,
+    downvotes: 1,
+    author: 'Kwame Asante',
+    authorAvatar: images.avatar2,
+    photo: images.onboardingSplash,
+  },
+  {
+    id: 'r3',
+    kind: 'dumping',
+    title: 'Illegal dump beside the road',
+    caption:
+      'Someone dumped mixed waste overnight along the roadside near the lorry park entrance.',
+    location: 'Kaneshie Market, Accra',
+    latitude: 5.5720,
+    longitude: -0.2305,
+    distance: '2.1 km',
+    timeAgo: '3h ago',
+    upvotes: 41,
+    downvotes: 3,
+    author: 'Fatima Diallo',
+    authorAvatar: images.avatar3,
+    photo: images.landingHero,
+  },
+  {
+    id: 'r4',
+    kind: 'blocked-drain',
+    title: 'Street drain full of litter',
+    caption:
+      'Leaves and plastic blocking the roadside drain. Neighbours already noticing smell after the last rain.',
+    location: 'East Legon, Accra',
+    latitude: 5.6408,
+    longitude: -0.1511,
+    distance: '3.0 km',
+    timeAgo: 'Yesterday',
+    upvotes: 12,
+    downvotes: 0,
+    author: 'Kofi Boateng',
+    authorAvatar: images.avatar4,
+    photo: images.onboardingLearn,
+  },
 ];
 
 export const voiceSuggestions = [

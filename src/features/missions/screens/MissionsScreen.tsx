@@ -4,6 +4,7 @@ import { useMemo, useState } from 'react';
 import { Pressable, ScrollView, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { ReportPostCard } from '@/features/missions/components/ReportPostCard';
 import { TAB_BAR_SCROLL_PADDING } from '@/shared/components/TabBar';
 import { Caption, Label } from '@/shared/components/ui';
 import type { Mission } from '@/shared/data/greenpathData';
@@ -20,7 +21,7 @@ import {
 import { useGreenPath } from '@/shared/state/GreenPathContext';
 import { colors } from '@/shared/theme/tokens';
 
-type Tab = 'active' | 'completed';
+type Tab = 'active' | 'reports';
 
 const missionVisual: Record<
   string,
@@ -43,20 +44,32 @@ function difficultyTone(level: Mission['difficulty']) {
   return { text: '#EA580C', soft: '#FFF7ED' };
 }
 
-export function MissionsScreen({ onOpenMission }: { onOpenMission: (mission: Mission) => void }) {
+export function MissionsScreen({
+  onOpenMission,
+  onOpenReport,
+}: {
+  onOpenMission: (mission: Mission) => void;
+  onOpenReport: () => void;
+}) {
   const insets = useSafeAreaInsets();
-  const { filteredMissions, completedMissionIds, profile } = useGreenPath();
+  const {
+    filteredMissions,
+    completedMissionIds,
+    profile,
+    reports,
+    reportVotes,
+    voteOnReport,
+  } = useGreenPath();
   const [tab, setTab] = useState<Tab>('active');
 
   const open = useMemo(
     () => filteredMissions.filter((m) => !completedMissionIds.includes(m.id)),
     [filteredMissions, completedMissionIds],
   );
-  const done = useMemo(
-    () => filteredMissions.filter((m) => completedMissionIds.includes(m.id)),
+  const doneCount = useMemo(
+    () => filteredMissions.filter((m) => completedMissionIds.includes(m.id)).length,
     [filteredMissions, completedMissionIds],
   );
-  const list = tab === 'active' ? open : done;
 
   return (
     <View className="flex-1 bg-canvas">
@@ -65,7 +78,6 @@ export function MissionsScreen({ onOpenMission }: { onOpenMission: (mission: Mis
         contentContainerStyle={{
           paddingBottom: TAB_BAR_SCROLL_PADDING + insets.bottom,
         }}>
-        {/* Header */}
         <View
           className="bg-primary px-5 pb-6"
           style={{ paddingTop: insets.top + 14 }}>
@@ -86,21 +98,19 @@ export function MissionsScreen({ onOpenMission }: { onOpenMission: (mission: Mis
               label="Streak"
             />
             <StatPill
-              icon={<Ionicons name="checkmark-circle" size={16} color="#A7F3D0" />}
-              value={String(done.length)}
-              label="Done"
+              icon={<Ionicons name="megaphone-outline" size={16} color="#A7F3D0" />}
+              value={String(reports.length)}
+              label="Reports"
             />
           </View>
 
           <Pressable
-            onPress={() => {
-              const report = open.find((m) => m.id === 'report-nearby') ?? open[0];
-              if (report) onOpenMission(report);
-            }}
+            onPress={onOpenReport}
             accessibilityRole="button"
             accessibilityLabel="Report trash nearby"
             className="mt-4 flex-row items-center gap-3 rounded-2xl bg-white px-4 py-3.5">
-            <View className="h-10 w-10 items-center justify-center rounded-xl bg-orange-soft"
+            <View
+              className="h-10 w-10 items-center justify-center rounded-xl"
               style={{ backgroundColor: '#FFF7ED' }}>
               <MaterialCommunityIcons name="map-marker-alert" size={22} color="#EA580C" />
             </View>
@@ -115,7 +125,6 @@ export function MissionsScreen({ onOpenMission }: { onOpenMission: (mission: Mis
         </View>
 
         <View className="gap-5 px-5 pb-8 pt-4">
-          {/* Tabs */}
           <View className="flex-row rounded-full bg-canvas-sunken p-1.5">
             <TabButton
               label="Active"
@@ -123,36 +132,58 @@ export function MissionsScreen({ onOpenMission }: { onOpenMission: (mission: Mis
               onPress={() => setTab('active')}
             />
             <TabButton
-              label="Completed"
-              active={tab === 'completed'}
-              onPress={() => setTab('completed')}
+              label="Reports"
+              active={tab === 'reports'}
+              onPress={() => setTab('reports')}
             />
           </View>
 
-          {list.length === 0 ? (
+          {tab === 'active' ? (
+            open.length === 0 ? (
+              <View className="items-center gap-2 rounded-2xl bg-card px-5 py-12">
+                <Ionicons name="leaf-outline" size={36} color={colors.primary.DEFAULT} />
+                <Label className="font-sans-semibold">No active missions</Label>
+                <Caption className="text-center">
+                  You’re all caught up. Check back soon.
+                </Caption>
+                {doneCount > 0 ? (
+                  <Caption className="text-center">
+                    {doneCount} other mission{doneCount === 1 ? '' : 's'} finished earlier.
+                  </Caption>
+                ) : null}
+              </View>
+            ) : (
+              <View className="gap-3">
+                {open.map((mission) => (
+                  <MissionCard
+                    key={mission.id}
+                    mission={mission}
+                    onPress={() => onOpenMission(mission)}
+                  />
+                ))}
+              </View>
+            )
+          ) : reports.length === 0 ? (
             <View className="items-center gap-2 rounded-2xl bg-card px-5 py-12">
-              <Ionicons
-                name={tab === 'active' ? 'leaf-outline' : 'trophy-outline'}
-                size={36}
-                color={colors.primary.DEFAULT}
-              />
-              <Label className="font-sans-semibold">
-                {tab === 'active' ? 'No active missions' : 'No completed missions yet'}
-              </Label>
+              <Ionicons name="camera-outline" size={36} color={colors.primary.DEFAULT} />
+              <Label className="font-sans-semibold">No reports yet</Label>
               <Caption className="text-center">
-                {tab === 'active'
-                  ? 'You’re all caught up. Check back soon.'
-                  : 'Finish a mission to see it here.'}
+                Post a photo of trash or a blocked drain so neighbours can confirm it.
               </Caption>
+              <Pressable
+                onPress={onOpenReport}
+                className="mt-2 rounded-2xl bg-primary px-5 py-3">
+                <Text className="font-sans-bold text-body text-white">Report Nearby</Text>
+              </Pressable>
             </View>
           ) : (
-            <View className="gap-3">
-              {list.map((mission) => (
-                <MissionCard
-                  key={mission.id}
-                  mission={mission}
-                  completed={tab === 'completed'}
-                  onPress={() => onOpenMission(mission)}
+            <View className="gap-8">
+              {reports.map((report) => (
+                <ReportPostCard
+                  key={report.id}
+                  report={report}
+                  vote={reportVotes[report.id]}
+                  onVote={(vote) => voteOnReport(report.id, vote)}
                 />
               ))}
             </View>
@@ -211,20 +242,16 @@ function TabButton({
 function MissionCard({
   mission,
   onPress,
-  completed,
 }: {
   mission: Mission;
   onPress: () => void;
-  completed?: boolean;
 }) {
   const visual = missionVisual[mission.illustration] ?? missionVisual.recycle;
   const Icon = visual.Icon;
   const diff = difficultyTone(mission.difficulty);
 
   return (
-    <View
-      className="gap-4 rounded-2xl bg-card p-4"
-      style={{ opacity: completed ? 0.85 : 1 }}>
+    <View className="gap-4 rounded-2xl bg-card p-4">
       <View className="flex-row items-start gap-3">
         <View
           className="h-12 w-12 items-center justify-center rounded-2xl"
@@ -264,27 +291,16 @@ function MissionCard({
         <Pressable
           onPress={onPress}
           accessibilityRole="button"
-          accessibilityLabel={completed ? `View ${mission.title}` : `Start ${mission.title}`}
-          className={`min-h-12 flex-1 items-center justify-center rounded-2xl ${
-            completed ? 'bg-primary-50' : 'bg-primary'
-          }`}>
-          <Text
-            className={`font-sans-bold text-body ${
-              completed ? 'text-primary' : 'text-white'
-            }`}>
-            {completed ? 'View Mission' : 'Start Mission'}
-          </Text>
+          accessibilityLabel={`Start ${mission.title}`}
+          className="min-h-12 flex-1 items-center justify-center rounded-2xl bg-primary">
+          <Text className="font-sans-bold text-body text-white">Start Mission</Text>
         </Pressable>
 
         <Pressable
           onPress={onPress}
-          accessibilityLabel={completed ? 'Completed' : 'Mark ready'}
+          accessibilityLabel="Mark ready"
           className="h-12 w-12 items-center justify-center rounded-2xl bg-canvas-sunken">
-          <Ionicons
-            name={completed ? 'checkmark-circle' : 'checkmark'}
-            size={22}
-            color={completed ? colors.primary.DEFAULT : colors.muted}
-          />
+          <Ionicons name="checkmark" size={22} color={colors.muted} />
         </Pressable>
       </View>
     </View>

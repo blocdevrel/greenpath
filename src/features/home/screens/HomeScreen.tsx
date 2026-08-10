@@ -29,7 +29,8 @@ export type HomeAction =
   | 'voice'
   | 'community'
   | 'notifications'
-  | 'rewards';
+  | 'rewards'
+  | 'leaderboard';
 
 type IonName = ComponentProps<typeof Ionicons>['name'];
 type MciName = ComponentProps<typeof MaterialCommunityIcons>['name'];
@@ -43,12 +44,12 @@ const quickActions: {
   soft: string;
 }[] = [
   {
-    id: 'lesson',
-    title: 'Continue\nLesson',
+    id: 'leaderboard',
+    title: 'Leaderboard',
     set: 'ion',
-    icon: 'book-outline',
-    tint: colors.primary.DEFAULT,
-    soft: colors.primary[50],
+    icon: 'trophy-outline',
+    tint: colors.gold.DEFAULT,
+    soft: colors.gold.soft,
   },
   {
     id: 'report',
@@ -271,23 +272,6 @@ export function HomeScreen({
         </View>
 
         <View className="gap-6 px-5 pb-8 pt-5">
-          <Pressable
-            onPress={() => onAction('report')}
-            accessibilityRole="button"
-            accessibilityLabel="Report trash nearby"
-            className="flex-row items-center gap-3 rounded-2xl bg-card px-4 py-4 active:opacity-90">
-            <View
-              className="h-12 w-12 items-center justify-center rounded-2xl"
-              style={{ backgroundColor: '#FFF7ED' }}>
-              <MaterialCommunityIcons name="map-marker-alert" size={24} color="#EA580C" />
-            </View>
-            <View className="min-w-0 flex-1 gap-0.5">
-              <Label className="font-sans-bold">Report Nearby</Label>
-              <Caption>Flag trash, dumping, or a blocked drain around you</Caption>
-            </View>
-            <Ionicons name="chevron-forward" size={18} color={colors.muted} />
-          </Pressable>
-
           <View className="gap-3">
             <Overline>Today's Mission</Overline>
             <Pressable onPress={() => onAction('mission')}>
