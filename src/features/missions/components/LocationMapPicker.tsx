@@ -428,7 +428,7 @@ function MapSurface({
         height: '100%',
         display: 'block',
         background: '#eef2f8',
-      } as ViewStyle,
+      } as unknown as ViewStyle,
     });
   }
 

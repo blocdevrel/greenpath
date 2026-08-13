@@ -1,11 +1,13 @@
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { useEffect, useMemo } from 'react';
-import { Text, View } from 'react-native';
+import { Pressable, Text, View } from 'react-native';
 
 import { useTts } from '@/shared/a11y/useTts';
 import { SpeakButton } from '@/shared/components/SpeakButton';
 import { Body, Button, Caption, Card, Label, Screen } from '@/shared/components/ui';
 import type { QuizInsight } from '@/shared/state/GreenPathContext';
 import { useGreenPath } from '@/shared/state/GreenPathContext';
+import { colors } from '@/shared/theme/tokens';
 
 export function QuizResultsScreen({
   insight,
@@ -36,7 +38,17 @@ export function QuizResultsScreen({
 
   return (
     <Screen bottomPadding={28}>
-      <View className="items-center gap-4 pt-6">
+      <Pressable
+        onPress={() => {
+          void stop();
+          onContinue();
+        }}
+        accessibilityLabel="Back"
+        className="h-11 w-11 items-center justify-center self-start rounded-full border border-line bg-card-raised">
+        <Ionicons name="arrow-back" size={20} color={colors.ink.DEFAULT} />
+      </Pressable>
+
+      <View className="items-center gap-4">
         <View className="h-40 w-40 items-center justify-center rounded-full border-[10px] border-primary bg-primary-50">
           <Text className="font-sans-extrabold text-display text-primary">{data.scorePct}%</Text>
         </View>
@@ -88,7 +100,7 @@ export function QuizResultsScreen({
         }}
       />
       <Button
-        label="Continue"
+        label="Back to home"
         variant="ghost"
         size="lg"
         onPress={() => {

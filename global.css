@@ -2,24 +2,32 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Keep web preview looking like a phone, not a stretched desktop layout. */
+/* Keep web preview looking like a phone, not a stretched desktop layout.
+   Use dvh so mobile browser chrome / soft keyboard resize correctly. */
 html,
 body,
 #root {
   height: 100%;
+  height: 100dvh;
   margin: 0;
   overflow: hidden;
   background-color: #e8f0eb;
+  /* Avoid iOS rubber-band scrolling the page behind the app shell. */
+  overscroll-behavior: none;
 }
 
 #root {
   display: flex;
   justify-content: center;
+  min-height: 0;
+  /* Let flex children shrink when the soft keyboard resizes the layout viewport. */
+  overflow: hidden;
 }
 
 #root > div {
   width: 100%;
   height: 100%;
+  min-height: 0;
 }
 
 /* React Native Web inputs inherit browser chrome — strip inner borders/outlines. */
@@ -34,6 +42,11 @@ select,
   -webkit-appearance: none !important;
   appearance: none !important;
   border-radius: 0;
+  touch-action: manipulation;
+  -webkit-user-select: text;
+  user-select: text;
+  /* Prevent iOS zoom-on-focus which breaks fixed shells. */
+  font-size: 16px !important;
 }
 
 input:focus,

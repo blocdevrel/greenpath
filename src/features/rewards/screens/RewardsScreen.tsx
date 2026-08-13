@@ -1,34 +1,48 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { Pressable, Text, View } from 'react-native';
+import { Image, Pressable, Text, View } from 'react-native';
 
-import { Illustration } from '@/shared/components/Illustration';
-import { Body, Caption, Card, Label, Screen, Stat } from '@/shared/components/ui';
-import { badges } from '@/shared/data/greenpathData';
+import { BadgeMedal } from '@/features/rewards/components/BadgeMedal';
+import { StreakFireIcon } from '@/shared/components/GameArt';
+import { Body, Caption, Label, Screen, Stat } from '@/shared/components/ui';
+import { images } from '@/shared/media';
 import { useGreenPath } from '@/shared/state/GreenPathContext';
 import { colors } from '@/shared/theme/tokens';
 
 export function RewardsScreen({ onBack }: { onBack: () => void }) {
-  const { profile, unlockedBadgeIds } = useGreenPath();
-  const xpPct = profile.xp / profile.xpToNext;
+  const { profile, badges } = useGreenPath();
+  const xpPct = Math.min(1, profile.xpToNext > 0 ? profile.xp / profile.xpToNext : 0);
+  const unlockedCount = badges.filter((b) => b.unlocked).length;
 
   return (
     <Screen bottomPadding={28}>
       <Pressable
         onPress={onBack}
         accessibilityLabel="Back"
-        className="h-11 w-11 items-center justify-center self-start rounded-full border border-line bg-card-raised">
+        className="h-11 w-11 items-center justify-center self-start border border-line bg-card-raised"
+        style={{ borderRadius: 8 }}>
         <Ionicons name="arrow-back" size={20} color={colors.ink.DEFAULT} />
       </Pressable>
 
-      <View className="items-center gap-2">
-        <Illustration kind="trophy" size="lg" />
-        <Text className="font-sans-extrabold text-title text-ink">Rewards</Text>
-        <Body className="text-center">
-          Earn XP from lessons, quizzes, and verified climate missions.
-        </Body>
+      <View className="flex-row items-center gap-3">
+        <Image
+          source={images.treasure}
+          style={{ width: 52, height: 52 }}
+          resizeMode="contain"
+          accessibilityIgnoresInvertColors
+          accessibilityLabel="Rewards treasure"
+        />
+        <View className="min-w-0 flex-1 gap-1">
+          <Text className="font-sans-extrabold text-title text-ink">Rewards</Text>
+          <Body>
+            Earn XP from lessons, quizzes, and verified climate missions.
+          </Body>
+          <Caption>
+            {unlockedCount} / {Math.max(badges.length, 1)} badges unlocked
+          </Caption>
+        </View>
       </View>
 
-      <Card className="gap-3">
+      <View className="gap-3 bg-card p-4" style={{ borderRadius: 8 }}>
         <View className="flex-row items-end justify-between">
           <View>
             <Caption>XP meter</Caption>
@@ -39,39 +53,53 @@ export function RewardsScreen({ onBack }: { onBack: () => void }) {
           </View>
           <Label tone="primary">Level {profile.level}</Label>
         </View>
-        <View className="h-3 overflow-hidden rounded-full bg-canvas-sunken">
+        <View className="h-2.5 overflow-hidden bg-canvas-sunken" style={{ borderRadius: 8 }}>
           <View
-            className="h-full rounded-full bg-gold"
-            style={{ width: `${Math.round(xpPct * 100)}%` }}
+            className="h-full bg-gold"
+            style={{ width: `${Math.round(xpPct * 100)}%`, borderRadius: 8 }}
           />
         </View>
-      </Card>
+      </View>
 
-      <Card tone="primary" className="flex-row items-center justify-between">
+      <View className="flex-row items-center justify-between bg-primary px-4 py-3.5" style={{ borderRadius: 8 }}>
         <View>
           <Caption className="text-white/80">Learning streak</Caption>
           <Text className="font-sans-extrabold text-heading text-white">
-            {profile.streak} days 🔥
+            {profile.streak} days
           </Text>
         </View>
-        <Text className="text-3xl">🎉</Text>
-      </Card>
+        <View
+          className="h-12 w-12 items-center justify-center bg-white/15"
+          style={{ borderRadius: 8 }}>
+          <StreakFireIcon size={36} />
+        </View>
+      </View>
 
       <Label className="font-sans-semibold">Badges</Label>
-      <View className="flex-row flex-wrap gap-3">
-        {badges.map((badge) => {
-          const unlocked = unlockedBadgeIds.includes(badge.id);
-          return (
-            <Card
-              key={badge.id}
-              className={`w-[47%] items-center gap-2 py-4 ${unlocked ? '' : 'opacity-45'}`}>
-              <Illustration kind={badge.illustration} size="sm" />
-              <Label className="text-center font-sans-semibold">{badge.name}</Label>
-              <Caption>{unlocked ? 'Unlocked' : 'Locked. Complete missions'}</Caption>
-            </Card>
-          );
-        })}
-      </View>
+      {badges.length === 0 ? (
+        <View className="bg-card p-4" style={{ borderRadius: 8 }}>
+          <Caption>
+            Sign in online to load the badge catalog. Completing lessons and missions unlocks them.
+          </Caption>
+        </View>
+      ) : (
+        <View className="flex-row flex-wrap justify-between gap-y-2.5">
+          {badges.map((badge) => (
+            <View
+              key={badge.key}
+              className="items-center gap-2 bg-card px-3 py-4"
+              style={{ width: '48.5%', borderRadius: 8, opacity: badge.unlocked ? 1 : 0.85 }}>
+              <BadgeMedal visual={badge.visual} unlocked={badge.unlocked} size="md" />
+              <Label className="text-center font-sans-semibold" numberOfLines={1}>
+                {badge.name}
+              </Label>
+              <Caption className="text-center" numberOfLines={2}>
+                {badge.unlocked ? badge.description : badge.hint}
+              </Caption>
+            </View>
+          ))}
+        </View>
+      )}
     </Screen>
   );
 }

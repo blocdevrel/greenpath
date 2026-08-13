@@ -5,6 +5,8 @@ import { PlusJakartaSans_600SemiBold } from '@expo-google-fonts/plus-jakarta-san
 import { PlusJakartaSans_700Bold } from '@expo-google-fonts/plus-jakarta-sans/700Bold';
 import { PlusJakartaSans_800ExtraBold } from '@expo-google-fonts/plus-jakarta-sans/800ExtraBold';
 import { useFonts } from 'expo-font';
+import { useEffect, useState } from 'react';
+import { Platform } from 'react-native';
 
 /**
  * Loads the six Plus Jakarta Sans weights the type scale depends on.
@@ -19,7 +21,16 @@ export function useAppFonts() {
     PlusJakartaSans_700Bold,
     PlusJakartaSans_800ExtraBold,
   });
+  const [timedOut, setTimedOut] = useState(false);
 
-  // Render anyway on failure rather than trapping the worker on a splash screen.
-  return loaded || error !== null;
+  // FontFaceObserver on web can hit a 12s timeout without surfacing an error
+  // to useFonts — that left App stuck on `return null` (blank screen).
+  useEffect(() => {
+    if (loaded || error) return;
+    const ms = Platform.OS === 'web' ? 4000 : 12000;
+    const timer = setTimeout(() => setTimedOut(true), ms);
+    return () => clearTimeout(timer);
+  }, [loaded, error]);
+
+  return loaded || error !== null || timedOut;
 }

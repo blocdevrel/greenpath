@@ -1,98 +1,145 @@
+import { useAuth, useSignIn, useSignUp } from '@clerk/expo';
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { useRef, useState } from 'react';
-import { Pressable, TextInput, View } from 'react-native';
+import { useState } from 'react';
+import { ActivityIndicator, Pressable, View } from 'react-native';
 
-import { Button, Display, Label, Screen } from '@/shared/components/ui';
+import { Button, Display, Label } from '@/shared/components/ui';
+import {
+  clearPendingSignupInterests,
+  markPendingSignupInterests,
+} from '@/shared/storage/authOnboarding';
 import { colors } from '@/shared/theme/tokens';
-import { webInputReset } from '@/shared/ui/webInputReset';
 
-const CODE_LENGTH = 4;
+import { clerkErrorMessage } from '../clerkErrors';
+import { AuthScreen } from '../components/AuthScreen';
+import { OTP_LENGTH, OtpInput } from '../components/OtpInput';
+
+export type VerifyMode = 'signup' | 'signin';
 
 export function VerifyCodeScreen({
-  phone,
+  email,
+  mode = 'signup',
   onBack,
-  onVerified,
 }: {
-  phone: string;
+  email: string;
+  mode?: VerifyMode;
   onBack: () => void;
-  onVerified: () => void;
 }) {
-  const [digits, setDigits] = useState<string[]>(Array(CODE_LENGTH).fill(''));
-  const inputs = useRef<(TextInput | null)[]>([]);
+  const { isLoaded: authLoaded } = useAuth();
+  const { signUp } = useSignUp();
+  const { signIn } = useSignIn();
+  const [digits, setDigits] = useState<string[]>(Array(OTP_LENGTH).fill(''));
+  const [error, setError] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
 
   const code = digits.join('');
-  const ready = code.length === CODE_LENGTH;
+  const ready = code.length === OTP_LENGTH;
 
-  const setDigit = (index: number, value: string) => {
-    const cleaned = value.replace(/\D/g, '').slice(-1);
-    const next = [...digits];
-    next[index] = cleaned;
-    setDigits(next);
+  const onVerify = async () => {
+    setError(null);
+    setBusy(true);
+    try {
+      if (mode === 'signin') {
+        if (!signIn) return;
+        const { error: verifyError } = await signIn.mfa.verifyEmailCode({ code });
+        if (verifyError) {
+          setError(clerkErrorMessage(verifyError));
+          return;
+        }
+        if (signIn.status === 'complete') {
+          const { error: finalizeError } = await signIn.finalize();
+          if (finalizeError) setError(clerkErrorMessage(finalizeError));
+          else await clearPendingSignupInterests();
+        } else {
+          setError(`Sign-in incomplete (${signIn.status}). Try again.`);
+        }
+        return;
+      }
 
-    if (cleaned && index < CODE_LENGTH - 1) {
-      inputs.current[index + 1]?.focus();
+      if (!signUp) return;
+      const { error: verifyError } = await signUp.verifications.verifyEmailCode({ code });
+      if (verifyError) {
+        setError(clerkErrorMessage(verifyError));
+        return;
+      }
+      await markPendingSignupInterests();
+      const { error: finalizeError } = await signUp.finalize();
+      if (finalizeError) {
+        setError(clerkErrorMessage(finalizeError));
+        await clearPendingSignupInterests();
+      }
+    } catch (e) {
+      setError(clerkErrorMessage(e));
+    } finally {
+      setBusy(false);
     }
   };
 
-  const onKeyPress = (index: number, key: string) => {
-    if (key === 'Backspace' && !digits[index] && index > 0) {
-      inputs.current[index - 1]?.focus();
+  const onResend = async () => {
+    setError(null);
+    setBusy(true);
+    try {
+      if (mode === 'signin') {
+        if (!signIn) return;
+        const { error: sendError } = await signIn.mfa.sendEmailCode();
+        if (sendError) {
+          setError(clerkErrorMessage(sendError));
+          return;
+        }
+      } else {
+        if (!signUp) return;
+        const { error: sendError } = await signUp.verifications.sendEmailCode();
+        if (sendError) {
+          setError(clerkErrorMessage(sendError));
+          return;
+        }
+      }
+      setDigits(Array(OTP_LENGTH).fill(''));
+    } catch (e) {
+      setError(clerkErrorMessage(e));
+    } finally {
+      setBusy(false);
     }
   };
 
   return (
-    <Screen bottomPadding={28}>
+    <AuthScreen>
       <Pressable
         onPress={onBack}
         accessibilityLabel="Back"
-        className="h-11 w-11 items-center justify-center self-start rounded-full border border-line bg-card-raised">
-        <Ionicons name="arrow-back" size={20} color={colors.ink.DEFAULT} />
+        className="h-10 w-10 items-center justify-center self-start rounded-full border border-line bg-card-raised">
+        <Ionicons name="arrow-back" size={18} color={colors.ink.DEFAULT} />
       </Pressable>
 
-      <View className="gap-2">
+      <View className="gap-1.5">
         <Display lead="Enter" trail="Code" />
-        <Label tone="subtle">SMS sent to {phone || 'your phone'}</Label>
+        <Label tone="subtle" className="text-caption">
+          {mode === 'signin'
+            ? `New device check — code sent to ${email || 'your inbox'}`
+            : `Email code sent to ${email || 'your inbox'}`}
+        </Label>
       </View>
 
-      <View className="flex-row justify-between gap-3">
-        {digits.map((digit, index) => (
-          <View
-            key={index}
-            className={`h-16 flex-1 items-center justify-center rounded-md border bg-card-raised ${
-              digit ? 'border-primary' : 'border-line'
-            }`}>
-            <TextInput
-              ref={(ref) => {
-                inputs.current[index] = ref;
-              }}
-              value={digit}
-              onChangeText={(value) => setDigit(index, value)}
-              onKeyPress={({ nativeEvent }) => onKeyPress(index, nativeEvent.key)}
-              keyboardType="number-pad"
-              maxLength={1}
-              selectTextOnFocus
-              textAlign="center"
-              className="h-full w-full font-sans-extrabold text-title text-ink"
-              accessibilityLabel={`Digit ${index + 1}`}
-              style={webInputReset}
-            />
-          </View>
-        ))}
-      </View>
+      <OtpInput digits={digits} onChangeDigits={setDigits} autoFocus />
+
+      {error ? <Label className="text-center text-caption text-danger">{error}</Label> : null}
 
       <Button
-        label="Verify"
+        label={busy ? 'Verifying…' : 'Verify'}
         size="lg"
-        disabled={!ready}
-        onPress={onVerified}
+        disabled={!ready || busy || !authLoaded}
+        onPress={() => void onVerify()}
         trailingGlyph="→"
       />
 
+      {busy ? <ActivityIndicator color={colors.primary.DEFAULT} /> : null}
+
       <Pressable
-        onPress={() => setDigits(Array(CODE_LENGTH).fill(''))}
-        className="h-12 items-center justify-center">
+        onPress={() => void onResend()}
+        disabled={busy}
+        className="min-h-11 items-center justify-center">
         <Label tone="primary">Resend code</Label>
       </Pressable>
-    </Screen>
+    </AuthScreen>
   );
 }

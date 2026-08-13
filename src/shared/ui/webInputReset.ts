@@ -8,6 +8,7 @@ export const webInputReset = (
         outlineStyle: 'none' as const,
         borderWidth: 0,
         boxShadow: 'none',
+        cursor: 'text',
       }
     : {}
 ) as TextStyle;

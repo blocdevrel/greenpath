@@ -1,7 +1,7 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import type { ComponentProps } from 'react';
-import { Pressable, Text, View } from 'react-native';
+import { Platform, Pressable, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import type { AppTab } from '@/navigation/tabs';
@@ -29,6 +29,11 @@ const tabs: readonly {
 /** Reserve this much scroll padding above the floating tab bar. */
 export const TAB_BAR_SCROLL_PADDING = 104;
 
+/** Total height of the fixed tab bar (for FAB / overlay positioning). */
+export function tabBarTotalHeight(insets: { bottom: number }) {
+  return 8 + 56 + Math.max(insets.bottom, 10);
+}
+
 export function TabBar({
   activeTab,
   onTabChange,
@@ -40,8 +45,9 @@ export function TabBar({
 
   return (
     <View
-      className="absolute bottom-0 left-0 right-0 z-50 border-t border-line bg-card-raised pt-2"
+      className="absolute bottom-0 left-0 right-0 border-t border-line bg-card-raised pt-2"
       style={{
+        zIndex: 100,
         paddingBottom: Math.max(insets.bottom, 10),
         paddingHorizontal: 4,
       }}>
@@ -63,6 +69,7 @@ export function TabBar({
                 minHeight: 56,
                 minWidth: 0,
                 paddingHorizontal: 2,
+                ...(Platform.OS === 'web' ? { cursor: 'pointer' } : null),
               }}>
               <View
                 style={{

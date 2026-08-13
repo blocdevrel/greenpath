@@ -1,21 +1,111 @@
+import { useAuth, useSignIn } from '@clerk/expo';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useState } from 'react';
-import { Pressable, Text, View } from 'react-native';
+import { ActivityIndicator, Pressable, Text, View } from 'react-native';
 
 import { Body, Button, Label, Screen } from '@/shared/components/ui';
 import { colors } from '@/shared/theme/tokens';
 
+import { clerkErrorMessage } from '../clerkErrors';
 import { AuthField } from '../components/AuthField';
+
+type Step = 'email' | 'code' | 'password';
 
 export function ForgotPasswordScreen({
   onBack,
-  onSent,
+  onDone,
 }: {
   onBack: () => void;
-  onSent: () => void;
+  onDone: () => void;
 }) {
-  const [email, setEmail] = useState('isaac@greenpath.gh');
-  const [sent, setSent] = useState(false);
+  const { isLoaded: authLoaded } = useAuth();
+  const { signIn } = useSignIn();
+  const [step, setStep] = useState<Step>('email');
+  const [email, setEmail] = useState('');
+  const [code, setCode] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+
+  const sendCode = async () => {
+    if (!signIn) return;
+    setError(null);
+    setBusy(true);
+    try {
+      const { error: createError } = await signIn.create({
+        identifier: email.trim(),
+      });
+      if (createError) {
+        setError(clerkErrorMessage(createError));
+        return;
+      }
+
+      const { error: sendError } = await signIn.resetPasswordEmailCode.sendCode();
+      if (sendError) {
+        setError(clerkErrorMessage(sendError));
+        return;
+      }
+
+      setStep('code');
+    } catch (e) {
+      setError(clerkErrorMessage(e));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const verifyCode = async () => {
+    if (!signIn) return;
+    setError(null);
+    setBusy(true);
+    try {
+      const { error: verifyError } = await signIn.resetPasswordEmailCode.verifyCode({
+        code: code.trim(),
+      });
+      if (verifyError) {
+        setError(clerkErrorMessage(verifyError));
+        return;
+      }
+      setStep('password');
+    } catch (e) {
+      setError(clerkErrorMessage(e));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const submitPassword = async () => {
+    if (!signIn) return;
+    setError(null);
+    setBusy(true);
+    try {
+      const { error: passwordError } = await signIn.resetPasswordEmailCode.submitPassword({
+        password,
+        signOutOfOtherSessions: true,
+      });
+      if (passwordError) {
+        setError(clerkErrorMessage(passwordError));
+        return;
+      }
+
+      if (signIn.status === 'complete') {
+        const { error: finalizeError } = await signIn.finalize();
+        if (finalizeError) {
+          setError(clerkErrorMessage(finalizeError));
+          return;
+        }
+        onDone();
+        return;
+      }
+
+      setError('Password updated, but sign-in needs another step. Try signing in.');
+      onDone();
+    } catch (e) {
+      setError(clerkErrorMessage(e));
+    } finally {
+      setBusy(false);
+    }
+  };
 
   return (
     <Screen bottomPadding={28}>
@@ -29,20 +119,15 @@ export function ForgotPasswordScreen({
       <View className="gap-2">
         <Text className="font-sans-extrabold text-title text-ink">Reset password</Text>
         <Body>
-          Enter your email and GreenPath will send a secure link so you can get back to your
-          climate journey.
+          {step === 'email'
+            ? 'Enter your email and Clerk will send a reset code.'
+            : step === 'code'
+              ? `Enter the code sent to ${email}.`
+              : 'Choose a new password to get back on your climate journey.'}
         </Body>
       </View>
 
-      {sent ? (
-        <View className="gap-4 rounded-md bg-primary-50 p-5">
-          <Label className="font-sans-bold">Check your inbox</Label>
-          <Body className="text-ink">
-            We sent reset instructions to {email}. After resetting, sign in and continue learning.
-          </Body>
-          <Button label="Back to Sign In" size="lg" onPress={onSent} />
-        </View>
-      ) : (
+      {step === 'email' ? (
         <>
           <AuthField
             label="Email"
@@ -53,13 +138,55 @@ export function ForgotPasswordScreen({
             placeholder="you@email.com"
           />
           <Button
-            label="Send reset link"
+            label={busy ? 'Sending…' : 'Send reset code'}
             size="lg"
             trailingGlyph="→"
-            onPress={() => setSent(true)}
+            disabled={busy || !authLoaded || !email.trim()}
+            onPress={() => void sendCode()}
           />
         </>
-      )}
+      ) : null}
+
+      {step === 'code' ? (
+        <>
+          <AuthField
+            label="Reset code"
+            value={code}
+            onChangeText={setCode}
+            keyboardType="number-pad"
+            placeholder="6-digit code"
+          />
+          <Button
+            label={busy ? 'Verifying…' : 'Verify code'}
+            size="lg"
+            trailingGlyph="→"
+            disabled={busy || !code.trim()}
+            onPress={() => void verifyCode()}
+          />
+        </>
+      ) : null}
+
+      {step === 'password' ? (
+        <>
+          <AuthField
+            label="New password"
+            value={password}
+            onChangeText={setPassword}
+            secureTextEntry
+            placeholder="At least 8 characters"
+          />
+          <Button
+            label={busy ? 'Saving…' : 'Set new password'}
+            size="lg"
+            trailingGlyph="→"
+            disabled={busy || password.length < 8}
+            onPress={() => void submitPassword()}
+          />
+        </>
+      ) : null}
+
+      {error ? <Label className="text-center text-danger">{error}</Label> : null}
+      {busy ? <ActivityIndicator color={colors.primary.DEFAULT} /> : null}
     </Screen>
   );
 }

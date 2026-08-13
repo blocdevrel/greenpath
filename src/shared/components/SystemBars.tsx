@@ -1,3 +1,4 @@
+import Constants from 'expo-constants';
 import { type ComponentType } from 'react';
 import { Platform, StatusBar, TurboModuleRegistry, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -17,11 +18,8 @@ type SystemBarsProps = NativeSystemBarsProps & {
 
 /**
  * SystemBars from react-native-edge-to-edge calls TurboModuleRegistry.getEnforcing
- * at import time on Android. Expo Go builds that omit RNEdgeToEdge (e.g. store
- * builds lagging an SDK release) then crash before the tree mounts.
- *
- * Prefer the real SystemBars when the native module is present; otherwise fall
- * back to RN StatusBar so development can continue.
+ * at import time on Android. Expo Go can crash hard if that native module is missing
+ * or mismatched with the SDK — use RN StatusBar instead.
  */
 function FallbackSystemBars({ style }: NativeSystemBarsProps) {
   const resolved = typeof style === 'string' ? style : (style?.statusBar ?? 'dark');
@@ -32,20 +30,27 @@ function FallbackSystemBars({ style }: NativeSystemBarsProps) {
 }
 
 function loadNativeSystemBars(): ComponentType<NativeSystemBarsProps> {
+  // Expo Go: never load edge-to-edge native module (process-level crash on many devices).
+  if (Constants.appOwnership === 'expo') {
+    return FallbackSystemBars;
+  }
+
   if (Platform.OS === 'android' && TurboModuleRegistry.get('RNEdgeToEdge') == null) {
     return FallbackSystemBars;
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-require-imports -- gated require avoids Android getEnforcing crash
-  return require('react-native-edge-to-edge').SystemBars as ComponentType<NativeSystemBarsProps>;
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    return require('react-native-edge-to-edge').SystemBars as ComponentType<NativeSystemBarsProps>;
+  } catch {
+    return FallbackSystemBars;
+  }
 }
 
 const NativeSystemBars = loadNativeSystemBars();
 
 /**
  * Icon style + a non-scrolling solid band for the status-bar safe area.
- * Edge-to-edge makes the native bar translucent; without this band, scrolling
- * content shows through behind the clock and battery.
  */
 export function SystemBars({ style, backgroundColor = colors.canvas.DEFAULT }: SystemBarsProps) {
   const insets = useSafeAreaInsets();
@@ -54,7 +59,6 @@ export function SystemBars({ style, backgroundColor = colors.canvas.DEFAULT }: S
     <>
       <NativeSystemBars style={style} />
       <View
-        pointerEvents="none"
         style={{
           position: 'absolute',
           top: 0,
@@ -63,6 +67,7 @@ export function SystemBars({ style, backgroundColor = colors.canvas.DEFAULT }: S
           height: insets.top,
           backgroundColor,
           zIndex: 50,
+          pointerEvents: 'none',
         }}
       />
     </>

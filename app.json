@@ -5,7 +5,10 @@
     "version": "1.0.0",
     "web": {
       "favicon": "./assets/favicon.png",
-      "bundler": "metro"
+      "bundler": "metro",
+      "meta": {
+        "viewport": "width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover, interactive-widget=resizes-content"
+      }
     },
     "experiments": {
       "tsconfigPaths": true
@@ -19,7 +22,8 @@
         }
       ],
       "expo-font",
-      "react-native-edge-to-edge"
+      "react-native-edge-to-edge",
+      "expo-audio"
     ],
     "orientation": "portrait",
     "icon": "./assets/icon.png",

@@ -19,7 +19,8 @@ export const TriageBadge = ({ level, className }: { level: TriageLevel; classNam
     <View
       accessibilityRole="text"
       accessibilityLabel={triage[level].label}
-      className={`h-8 flex-row items-center gap-2 self-start rounded-full px-3 ${style.bg} ${className ?? ''}`}>
+      className={`h-8 flex-row items-center gap-2 self-start px-3 ${style.bg} ${className ?? ''}`}
+      style={{ borderRadius: 8 }}>
       <View className={`h-2 w-2 rounded-full ${style.dot}`} />
       <Text className={`font-sans-semibold text-label ${style.fg}`}>{triage[level].label}</Text>
     </View>
@@ -28,7 +29,7 @@ export const TriageBadge = ({ level, className }: { level: TriageLevel; classNam
 
 /** Neutral metadata pill: distance, overdue count, sync state. */
 export const Badge = ({ label, className }: { label: string; className?: string }) => (
-  <View className={`h-7 justify-center rounded-full bg-canvas-sunken px-3 ${className ?? ''}`}>
+  <View className={`h-7 justify-center bg-canvas-sunken px-3 ${className ?? ''}`} style={{ borderRadius: 8 }}>
     <Text className="font-sans-medium text-caption text-subtle">{label}</Text>
   </View>
 );

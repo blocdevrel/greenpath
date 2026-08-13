@@ -29,5 +29,5 @@ export const onboardingPages = [
   },
 ] as const;
 
-export const splashArt = images.landingHero;
+export const splashArt = images.mascotWelcome;
 export const profileAvatar = images.avatarIsaac;

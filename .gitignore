@@ -35,6 +35,7 @@ yarn-error.*
 .env.local
 .env.*.local
 !.env.example
+!.env.production.example
 
 # testing
 coverage/
@@ -63,6 +64,9 @@ Desktop.ini
 .cache/
 tmp/
 temp/
+
+.vercel
+.env*
 
 .vercel
 .env*

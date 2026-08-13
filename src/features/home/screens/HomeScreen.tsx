@@ -2,24 +2,25 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { LinearGradient } from 'expo-linear-gradient';
 import type { ComponentProps, ComponentType } from 'react';
-import { useEffect, useState } from 'react';
-import { Image, Pressable, ScrollView, Text, View } from 'react-native';
+import { useMemo } from 'react';
+import { Image, Platform, Pressable, ScrollView, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import type { CommunityEventView } from '@/features/community/eventModel';
+import { EventAttendeeStack } from '@/features/community/components/EventAttendeeStack';
+import { IllustratedPromoCard } from '@/features/home/components/IllustratedPromoCard';
+import { WeeklyProgressCard } from '@/features/home/components/WeeklyProgressCard';
 import { useTts } from '@/shared/a11y/useTts';
-import { Illustration } from '@/shared/components/Illustration';
+import { profileAvatarSource } from '@/shared/api';
+import { eventScene, missionScene } from '@/shared/components/Illustration';
+import { useShellWidth } from '@/shared/components/MobileShell';
 import { TAB_BAR_SCROLL_PADDING } from '@/shared/components/TabBar';
-import { Caption, Card, Label, Overline } from '@/shared/components/ui';
-import {
-  events,
-  missions,
-  weeklyProgress,
-} from '@/shared/data/greenpathData';
-import { Flame, Trophy, Zap } from '@/shared/icons/lucide';
+import { Caption, Card, HorizontalScrollRow } from '@/shared/components/ui';
+import type { Mission } from '@/shared/data/greenpathData';
+import { Trophy, Zap } from '@/shared/icons/lucide';
+import { images } from '@/shared/media';
 import { useGreenPath } from '@/shared/state/GreenPathContext';
 import { colors } from '@/shared/theme/tokens';
-
-const upcomingEvent = events[0];
 
 export type HomeAction =
   | 'lesson'
@@ -38,6 +39,7 @@ type MciName = ComponentProps<typeof MaterialCommunityIcons>['name'];
 const quickActions: {
   id: HomeAction;
   title: string;
+  hint: string;
   set: 'ion' | 'mci';
   icon: IonName | MciName;
   tint: string;
@@ -46,6 +48,7 @@ const quickActions: {
   {
     id: 'leaderboard',
     title: 'Leaderboard',
+    hint: 'Rank & XP',
     set: 'ion',
     icon: 'trophy-outline',
     tint: colors.gold.DEFAULT,
@@ -53,7 +56,8 @@ const quickActions: {
   },
   {
     id: 'report',
-    title: 'Report\nNearby',
+    title: 'Report',
+    hint: 'Flag trash',
     set: 'mci',
     icon: 'map-marker-alert-outline',
     tint: '#EA580C',
@@ -61,7 +65,8 @@ const quickActions: {
   },
   {
     id: 'mission',
-    title: 'Climate\nMission',
+    title: 'Missions',
+    hint: 'Daily tasks',
     set: 'mci',
     icon: 'bullseye-arrow',
     tint: colors.lime.DEFAULT,
@@ -69,7 +74,8 @@ const quickActions: {
   },
   {
     id: 'voice',
-    title: 'AI Voice\nHelper',
+    title: 'Voice',
+    hint: 'Ask anything',
     set: 'ion',
     icon: 'mic-outline',
     tint: colors.primary[600],
@@ -84,42 +90,55 @@ function greeting() {
   return 'Good evening';
 }
 
-function initials(name: string) {
-  return name
-    .split(' ')
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((p) => p[0]?.toUpperCase() ?? '')
-    .join('');
-}
-
 export function HomeScreen({
   onAction,
   onOpenProfile,
+  onOpenEvent,
+  onOpenMission,
 }: {
   onAction: (action: HomeAction) => void;
   onOpenProfile?: () => void;
+  onOpenEvent?: (event: CommunityEventView) => void;
+  onOpenMission?: (mission: Mission) => void;
 }) {
   const insets = useSafeAreaInsets();
-  const { profile, filteredMissions } = useGreenPath();
-  const { announce, speaking, paused, playPause } = useTts();
-  const todayMission = filteredMissions[0] ?? missions[0];
+  const shellWidth = useShellWidth();
+  const { profile, filteredMissions, weeklyProgress, events } = useGreenPath();
+  const { speaking, paused, playPause } = useTts();
+  const todayMissions = useMemo(() => {
+    const list = filteredMissions.slice(0, 4);
+    const sachetIdx = list.findIndex((m) => m.id === 'sachet-sort');
+    const inviteIdx = list.findIndex((m) => m.id === 'invite-friend');
+    if (sachetIdx > -1 && inviteIdx > -1 && sachetIdx > inviteIdx) {
+      const next = [...list];
+      [next[inviteIdx], next[sachetIdx]] = [next[sachetIdx], next[inviteIdx]];
+      return next;
+    }
+    return list;
+  }, [filteredMissions]);
+  const todayMission = todayMissions[0];
   const displayName = profile.fullName || profile.name;
+  const avatarSrc = profileAvatarSource(profile);
   const treesEq = Math.round(profile.carbonSavedKg * 0.05 * 10) / 10;
-  const [joinedEvent, setJoinedEvent] = useState(false);
-  const eventAttendees = upcomingEvent.attendees.slice(0, 3);
-  const eventExtra = Math.max(0, upcomingEvent.participants - 3);
+  const upcomingEvents = useMemo(() => events.slice(0, 4), [events]);
+  const promoCardWidth = Math.max(240, shellWidth - 72);
 
-  const homeSpeech = `${greeting()} ${displayName}. You have ${profile.xp} XP, level ${profile.level}, streak ${profile.streak} days. You've prevented ${profile.carbonSavedKg} kilograms of CO2 this month. Today's mission: ${todayMission.title}.`;
+  const homeSpeech = `${greeting()} ${displayName}. You have ${profile.totalXp} XP, level ${profile.level}, streak ${profile.streak} days. You've prevented ${profile.carbonSavedKg} kilograms of CO2 this month.${
+    todayMission ? ` Today's mission: ${todayMission.title}.` : ''
+  }`;
 
-  useEffect(() => {
-    void announce(homeSpeech);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  // Don't auto-speak on open — device TTS sounds generic; users opt in via the play button.
+  // Voice coach (OpenRouter) lives on the Voice screen.
 
   return (
     <View className="flex-1 bg-canvas">
       <ScrollView
+        style={{
+          flex: 1,
+          ...(Platform.OS === 'web'
+            ? ({ overflowY: 'auto', WebkitOverflowScrolling: 'touch' } as const)
+            : null),
+        }}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{
           paddingBottom: TAB_BAR_SCROLL_PADDING + insets.bottom,
@@ -133,11 +152,10 @@ export function HomeScreen({
             end={{ x: 0, y: 1 }}
             style={{
               paddingTop: insets.top + 20,
-              paddingBottom: 72,
+              paddingBottom: 64,
               paddingHorizontal: 20,
-              minHeight: 280,
             }}>
-            <View className="gap-8">
+            <View className="gap-6">
               <View className="flex-row items-center justify-between gap-3">
                 <Text className="min-w-0 flex-1 font-sans-extrabold text-heading text-white" numberOfLines={1}>
                   GreenPath
@@ -151,49 +169,43 @@ export function HomeScreen({
                       speaking ? 'Pause reading' : paused ? 'Resume reading' : 'Play home audio'
                     }
                     accessibilityHint="Plays or pauses the home readout"
-                    className={`h-11 w-11 items-center justify-center rounded-full border ${
+                    className={`h-10 w-10 items-center justify-center rounded-full border ${
                       speaking || paused
                         ? 'border-white/40 bg-white'
                         : 'border-white/25 bg-white/20'
                     }`}>
                     <Ionicons
                       name={speaking ? 'pause' : 'play'}
-                      size={20}
+                      size={18}
                       color={speaking || paused ? colors.primary.DEFAULT : '#FFFFFF'}
                     />
                   </Pressable>
                   <Pressable
                     onPress={() => onAction('notifications')}
                     accessibilityLabel="Notifications"
-                    className="h-11 w-11 items-center justify-center rounded-full border border-white/25 bg-white/20">
-                    <Ionicons name="notifications-outline" size={20} color="#FFFFFF" />
+                    className="h-10 w-10 items-center justify-center rounded-full border border-white/25 bg-white/20">
+                    <Ionicons name="notifications-outline" size={18} color="#FFFFFF" />
                     <View className="absolute right-2 top-2 h-2 w-2 rounded-full bg-danger" />
                   </Pressable>
                   <Pressable
                     onPress={onOpenProfile}
                     accessibilityLabel="Profile"
-                    className="h-11 w-11 items-center justify-center overflow-hidden rounded-full bg-[#F59E0B]">
-                    {profile.avatar ? (
-                      <Image
-                        source={profile.avatar}
-                        style={{ width: '100%', height: '100%' }}
-                        resizeMode="cover"
-                        accessibilityIgnoresInvertColors
-                      />
-                    ) : (
-                      <Text className="font-sans-bold text-caption text-white">
-                        {initials(displayName)}
-                      </Text>
-                    )}
+                    className="h-10 w-10 items-center justify-center overflow-hidden rounded-full bg-primary-50">
+                    <Image
+                      source={avatarSrc}
+                      style={{ width: '100%', height: '100%' }}
+                      resizeMode="cover"
+                      accessibilityIgnoresInvertColors
+                    />
                   </Pressable>
                 </View>
               </View>
 
-              <View className="flex-row gap-2.5">
+              <View className="flex-row gap-2">
                 <BannerStat
                   Icon={Zap}
                   iconColor="#FACC15"
-                  value={profile.xp.toLocaleString()}
+                  value={profile.totalXp.toLocaleString()}
                   label="Total XP"
                 />
                 <BannerStat
@@ -208,8 +220,7 @@ export function HomeScreen({
                   accessibilityRole="button"
                   accessibilityLabel="Streak">
                   <BannerStat
-                    Icon={Flame}
-                    iconColor="#FB923C"
+                    image={images.streakFire}
                     value={`${profile.streak}d`}
                     label="Streak"
                   />
@@ -219,51 +230,24 @@ export function HomeScreen({
           </LinearGradient>
 
           {/* Half on gradient, half on white canvas */}
-          <View className="z-10 px-5" style={{ marginTop: -36 }}>
-            <View className="overflow-hidden rounded-2xl bg-primary">
-              {/* Soft seamless wash — large, low-contrast blobs */}
-              <View
-                pointerEvents="none"
-                className="absolute inset-0"
-                style={{ opacity: 0.35 }}>
-                <View
-                  className="absolute rounded-full"
-                  style={{
-                    width: 160,
-                    height: 160,
-                    right: -48,
-                    top: -56,
-                    backgroundColor: 'rgba(255,255,255,0.18)',
-                  }}
-                />
-                <View
-                  className="absolute rounded-full"
-                  style={{
-                    width: 120,
-                    height: 120,
-                    left: -40,
-                    bottom: -48,
-                    backgroundColor: 'rgba(255,255,255,0.12)',
-                  }}
-                />
-                <LinearGradient
-                  colors={['rgba(255,255,255,0.12)', 'transparent', 'rgba(0,0,0,0.06)']}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 1 }}
-                  style={{ position: 'absolute', top: 0, right: 0, bottom: 0, left: 0 }}
-                />
-              </View>
-
-              <View className="flex-row items-center gap-3 px-4 py-4">
-                <View className="h-10 w-10 items-center justify-center rounded-full bg-white/20">
-                  <Ionicons name="earth" size={22} color="#FFFFFF" />
+          <View className="z-10 px-5" style={{ marginTop: -32 }}>
+            <View className="overflow-hidden bg-primary" style={{ borderRadius: 8 }}>
+              <View className="flex-row items-center gap-3 px-3.5 py-3">
+                <View style={{ flexShrink: 0 }}>
+                  <Image
+                    source={images.earth}
+                    style={{ width: 40, height: 40 }}
+                    resizeMode="contain"
+                    accessibilityIgnoresInvertColors
+                    accessibilityLabel="Earth"
+                  />
                 </View>
-                <View className="min-w-0 flex-1 gap-0.5">
-                  <Text className="font-sans-bold text-body text-white">
-                    You've prevented {profile.carbonSavedKg} kg of CO₂ this month!
+                <View className="min-w-0 flex-1">
+                  <Text className="font-sans-bold text-label text-white" numberOfLines={2}>
+                    {profile.carbonSavedKg} kg CO₂ prevented this month
                   </Text>
-                  <Text className="font-sans text-caption text-white/85">
-                    That's equivalent to planting {treesEq} trees
+                  <Text className="font-sans text-caption text-white/80" numberOfLines={1}>
+                    Equal to {treesEq} trees planted
                   </Text>
                 </View>
               </View>
@@ -271,140 +255,117 @@ export function HomeScreen({
           </View>
         </View>
 
-        <View className="gap-6 px-5 pb-8 pt-5">
-          <View className="gap-3">
-            <Overline>Today's Mission</Overline>
-            <Pressable onPress={() => onAction('mission')}>
-              <Card className="flex-row items-center gap-4">
-                <Illustration kind={todayMission.illustration} size="sm" />
-                <View className="min-w-0 flex-1 gap-1">
-                  <Label className="font-sans-semibold">{todayMission.title}</Label>
-                  <Caption>
-                    {todayMission.xp} XP, {todayMission.minutes} min, {todayMission.impact}
-                  </Caption>
-                </View>
-                <Ionicons name="chevron-forward" size={18} color={colors.muted} />
-              </Card>
-            </Pressable>
-          </View>
-
-          <View className="gap-3">
-            <Overline>Weekly Progress</Overline>
-            <Card className="gap-4">
-              <View className="h-28 flex-row items-end justify-between gap-2">
-                {weeklyProgress.map((d) => (
-                  <View key={d.day} className="flex-1 items-center gap-2">
-                    <View
-                      className="w-full rounded-md bg-primary-100"
-                      style={{ height: Math.max(12, (d.value / 100) * 96) }}>
-                      <View
-                        className="absolute bottom-0 left-0 right-0 rounded-md bg-primary"
-                        style={{ height: `${d.value}%` }}
-                      />
-                    </View>
-                    <Caption>{d.day}</Caption>
-                  </View>
-                ))}
-              </View>
-            </Card>
-          </View>
-
-          <View className="gap-3">
-            <Overline>Quick Actions</Overline>
-            <View className="flex-row flex-wrap justify-between gap-y-3">
+        <View className="gap-6 pb-8 pt-3">
+          <View className="gap-3 px-5">
+            <Text className="font-sans-bold text-heading text-ink">Quick actions</Text>
+            <View className="flex-row flex-wrap justify-between gap-y-2.5">
               {quickActions.map((action) => (
                 <Pressable
                   key={action.id}
                   onPress={() => onAction(action.id)}
                   accessibilityRole="button"
-                  accessibilityLabel={(action.title ?? '').replace(/\n/g, ' ')}
-                  className="items-center gap-2 rounded-2xl bg-card px-2 py-4 active:opacity-90"
-                  style={{ width: '48%' }}>
+                  accessibilityLabel={`${action.title}. ${action.hint}`}
+                  className="flex-row items-center gap-3 bg-card px-3 py-3 active:opacity-90"
+                  style={{ width: '48.5%', borderRadius: 8 }}>
                   <View
-                    className="h-12 w-12 items-center justify-center rounded-full"
-                    style={{ backgroundColor: action.soft }}>
+                    className="h-10 w-10 items-center justify-center"
+                    style={{ backgroundColor: action.soft, borderRadius: 8 }}>
                     {action.set === 'mci' ? (
                       <MaterialCommunityIcons
                         name={action.icon as MciName}
-                        size={22}
+                        size={20}
                         color={action.tint}
                       />
                     ) : (
-                      <Ionicons name={action.icon as IonName} size={22} color={action.tint} />
+                      <Ionicons name={action.icon as IonName} size={20} color={action.tint} />
                     )}
                   </View>
-                  <Text className="text-center font-sans-semibold text-caption text-ink">
-                    {action.title}
-                  </Text>
+                  <View className="min-w-0 flex-1">
+                    <Text className="font-sans-bold text-label text-ink" numberOfLines={1}>
+                      {action.title}
+                    </Text>
+                    <Caption numberOfLines={1}>{action.hint}</Caption>
+                  </View>
                 </Pressable>
               ))}
             </View>
           </View>
 
-          {/* Upcoming Events — separate from Quick Actions */}
           <View className="gap-3">
-            <View className="flex-row items-center justify-between">
-              <Overline>Upcoming Events</Overline>
-              <Pressable onPress={() => onAction('community')} hitSlop={8}>
-                <Caption className="font-sans-semibold text-primary">See all →</Caption>
-              </Pressable>
-            </View>
-            <Card className="gap-4">
-              <View className="flex-row gap-3">
-                <View className="h-12 w-12 items-center justify-center rounded-full bg-lime-soft">
-                  <Ionicons name="leaf" size={22} color={colors.lime.DEFAULT} />
-                </View>
-                <View className="min-w-0 flex-1 gap-1">
-                  <Label className="font-sans-bold text-subheading">{upcomingEvent.title}</Label>
-                  <View className="flex-row items-center gap-1.5">
-                    <Ionicons name="location-outline" size={14} color={colors.muted} />
-                    <Caption numberOfLines={1}>
-                      {upcomingEvent.location}, {upcomingEvent.date}
-                    </Caption>
-                  </View>
-                </View>
+            <Text className="px-5 font-sans-bold text-heading text-ink">Today's mission</Text>
+            {todayMissions.length > 0 ? (
+              <HorizontalScrollRow
+                width={shellWidth}
+                contentContainerStyle={{ paddingHorizontal: 20 }}
+                snapToInterval={promoCardWidth + 12}
+                snapToAlignment="start">
+                {todayMissions.map((mission) => (
+                  <IllustratedPromoCard
+                    key={mission.id}
+                    image={missionScene(mission.illustration)}
+                    title={mission.title}
+                    subtitle={mission.impact}
+                    width={promoCardWidth}
+                    onPress={() =>
+                      onOpenMission ? onOpenMission(mission) : onAction('mission')
+                    }
+                    accessibilityLabel={`${mission.title}. ${mission.impact}`}
+                  />
+                ))}
+              </HorizontalScrollRow>
+            ) : (
+              <View className="px-5">
+                <Card className="items-center gap-2 py-8">
+                  <Caption className="text-center">Loading missions…</Caption>
+                </Card>
               </View>
+            )}
+          </View>
 
-              <View className="flex-row items-center justify-between gap-3">
-                <View className="flex-row items-center">
-                  {eventAttendees.map((person, index) => (
-                    <View
-                      key={`${person.name}-${index}`}
-                      className="h-8 w-8 overflow-hidden rounded-full border-2 border-card-raised bg-primary-50"
-                      style={{ marginLeft: index === 0 ? 0 : -8, zIndex: 10 - index }}>
-                      <Image
-                        source={person.source}
-                        style={{ width: '100%', height: '100%' }}
-                        resizeMode="cover"
-                        accessibilityIgnoresInvertColors
-                      />
-                    </View>
-                  ))}
-                  {eventExtra > 0 ? (
-                    <View
-                      className="h-8 w-8 items-center justify-center rounded-full border-2 border-card-raised bg-primary"
-                      style={{ marginLeft: -8 }}>
-                      <Text className="font-sans-bold text-caption text-white">
-                        +{eventExtra > 99 ? 99 : eventExtra}
-                      </Text>
-                    </View>
-                  ) : null}
-                </View>
+          <WeeklyProgressCard weeklyProgress={weeklyProgress} />
 
-                <Pressable
-                  onPress={() => setJoinedEvent((v) => !v)}
-                  className={`rounded-full px-4 py-2.5 ${
-                    joinedEvent ? 'bg-primary-50' : 'bg-primary'
-                  }`}>
-                  <Text
-                    className={`font-sans-semibold text-caption ${
-                      joinedEvent ? 'text-primary' : 'text-white'
-                    }`}>
-                    {joinedEvent ? 'Joined' : 'Join Event'}
-                  </Text>
-                </Pressable>
+          <View className="gap-3">
+            <Text className="px-5 font-sans-bold text-heading text-ink">Community events</Text>
+            {upcomingEvents.length === 0 ? (
+              <View className="mx-5 items-center rounded-lg bg-card px-5 py-8" style={{ borderRadius: 8 }}>
+                <Caption className="text-center">No upcoming events right now.</Caption>
               </View>
-            </Card>
+            ) : (
+              <HorizontalScrollRow
+                width={shellWidth}
+                contentContainerStyle={{ paddingHorizontal: 20 }}
+                snapToInterval={promoCardWidth + 12}
+                snapToAlignment="start">
+                {upcomingEvents.map((event) => (
+                  <IllustratedPromoCard
+                    key={event.id}
+                    image={eventScene(event.illustration)}
+                    title={event.title}
+                    subtitle={eventSubtitle(event)}
+                    width={promoCardWidth}
+                    onPress={() => onOpenEvent?.(event)}
+                    accessibilityLabel={`View ${event.title}`}
+                    footer={
+                      <View className="flex-row items-center gap-2">
+                        <EventAttendeeStack
+                          attendees={event.attendees}
+                          total={event.participants}
+                          joined={event.joined}
+                          youName={profile.name || 'You'}
+                          youPhoto={avatarSrc}
+                          seed={event.slug ?? event.id}
+                          size={28}
+                          max={4}
+                        />
+                        <Caption className="min-w-0 flex-1" numberOfLines={1}>
+                          {event.participants} going
+                        </Caption>
+                      </View>
+                    }
+                  />
+                ))}
+              </HorizontalScrollRow>
+            )}
           </View>
         </View>
       </ScrollView>
@@ -412,26 +373,44 @@ export function HomeScreen({
   );
 }
 
+function eventSubtitle(event: CommunityEventView) {
+  const raw = event.description?.trim();
+  if (!raw) return event.location;
+  const first = raw.split(/[.!?]/)[0]?.trim();
+  return first || event.location;
+}
+
 function BannerStat({
   Icon,
   iconColor = '#FFFFFF',
+  image,
   value,
   label,
 }: {
-  Icon: ComponentType<{ size?: number; color?: string; strokeWidth?: number }>;
+  Icon?: ComponentType<{ size?: number; color?: string; strokeWidth?: number }>;
   iconColor?: string;
+  image?: ComponentProps<typeof Image>['source'];
   value: string;
   label: string;
 }) {
   return (
     <View
-      className="min-w-0 flex-1 items-center justify-center gap-1.5 border border-white/30 px-2 py-4"
-      style={{ backgroundColor: 'rgba(255,255,255,0.22)', borderRadius: 20 }}>
-      <Icon size={22} color={iconColor} strokeWidth={2.25} />
-      <Text className="font-sans-extrabold text-subheading text-white" numberOfLines={1}>
+      className="min-w-0 flex-1 items-center justify-center gap-1 px-2 py-3"
+      style={{ backgroundColor: 'rgba(255,255,255,0.2)', borderRadius: 8 }}>
+      {image ? (
+        <Image
+          source={image}
+          style={{ width: 22, height: 22 }}
+          resizeMode="contain"
+          accessibilityIgnoresInvertColors
+        />
+      ) : Icon ? (
+        <Icon size={18} color={iconColor} strokeWidth={2.25} />
+      ) : null}
+      <Text className="font-sans-extrabold text-body text-white" numberOfLines={1}>
         {value}
       </Text>
-      <Text className="font-sans text-[11px] text-white/85" numberOfLines={1}>
+      <Text className="font-sans text-[11px] text-white/80" numberOfLines={1}>
         {label}
       </Text>
     </View>

@@ -38,7 +38,8 @@ export function ReferralStatusBadge({
     <View
       accessibilityRole="text"
       accessibilityLabel={style.label}
-      className={`h-7 flex-row items-center gap-1.5 self-start rounded-full px-2.5 ${style.bg} ${className ?? ''}`}>
+      className={`h-7 flex-row items-center gap-1.5 self-start px-2.5 ${style.bg} ${className ?? ''}`}
+      style={{ borderRadius: 8 }}>
       <View className={`h-1.5 w-1.5 rounded-full ${style.dot}`} />
       <Text className={`font-sans-semibold text-caption ${style.fg}`}>{style.label}</Text>
     </View>

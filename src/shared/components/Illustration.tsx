@@ -1,7 +1,9 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import type { ComponentProps } from 'react';
+import type { ImageSourcePropType } from 'react-native';
 import { View } from 'react-native';
 
+import { images } from '@/shared/media';
 import { colors } from '@/shared/theme/tokens';
 
 type IconName = ComponentProps<typeof Ionicons>['name'];
@@ -35,6 +37,26 @@ const presets: Record<
 };
 
 export type IllustrationKind = keyof typeof presets;
+
+/** Full-bleed Uber-style scenes for home mission cards. */
+export function missionScene(kind: IllustrationKind): ImageSourcePropType {
+  if (kind === 'recycle' || kind === 'plastic' || kind === 'water') {
+    return images.illustMissionRecycle;
+  }
+  if (kind === 'tree' || kind === 'agriculture' || kind === 'wildlife') {
+    return images.illustEventPlanting;
+  }
+  return images.illustMissionAction;
+}
+
+/** Full-bleed Uber-style scenes for community event cards. */
+export function eventScene(kind: IllustrationKind): ImageSourcePropType {
+  if (kind === 'tree') return images.illustEventPlanting;
+  if (kind === 'plastic' || kind === 'recycle' || kind === 'water') {
+    return images.illustEventCleanup;
+  }
+  return images.illustEventCommunity;
+}
 
 /**
  * Premium vector-style illustration blocks — cohesive shapes + iconography

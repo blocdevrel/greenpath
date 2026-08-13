@@ -1,82 +1,97 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
+import { useEffect } from 'react';
 import { Pressable, Switch, Text, View } from 'react-native';
 
-import { Caption, Card, Label, Screen } from '@/shared/components/ui';
+import { useTts } from '@/shared/a11y/useTts';
+import { SpeakButton } from '@/shared/components/SpeakButton';
+import { Body, Caption, Card, Label, Screen } from '@/shared/components/ui';
 import { useGreenPath } from '@/shared/state/GreenPathContext';
 import { colors } from '@/shared/theme/tokens';
 
 export function SettingsScreen({ onBack }: { onBack: () => void }) {
   const { prefs, updatePrefs } = useGreenPath();
+  const { announce, stop } = useTts();
+
+  useEffect(() => {
+    void announce(
+      'Settings. Voice and notification preferences.',
+    );
+    return () => {
+      void stop();
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <Screen bottomPadding={28}>
       <Pressable
-        onPress={onBack}
+        onPress={() => {
+          void stop();
+          onBack();
+        }}
         accessibilityLabel="Back"
         className="h-11 w-11 items-center justify-center self-start rounded-full border border-line bg-card-raised">
         <Ionicons name="arrow-back" size={20} color={colors.ink.DEFAULT} />
       </Pressable>
 
       <Text className="font-sans-extrabold text-title text-ink">Settings</Text>
-      <Caption>Theme, accessibility, voice, language & privacy</Caption>
+      <Caption>Voice and notification preferences</Caption>
+      <SpeakButton
+        text="Settings. Text to speech reads lessons and missions aloud. Voice navigation announces screens when you open them."
+        label="Read settings aloud"
+      />
 
-      <Section title="Theme">
+      <Section title="Voice">
         <ToggleRow
-          label="Dark Mode"
-          value={prefs.darkMode}
-          onChange={(v) => updatePrefs({ darkMode: v })}
-        />
-        <Row label="Theme" value={prefs.highContrast ? 'High Contrast' : 'Nature Green'} />
-      </Section>
-
-      <Section title="Accessibility">
-        <ToggleRow
-          label="Large fonts"
-          value={prefs.largeFonts}
-          onChange={(v) => updatePrefs({ largeFonts: v })}
-        />
-        <ToggleRow
-          label="High contrast mode"
-          value={prefs.highContrast}
-          onChange={(v) => updatePrefs({ highContrast: v })}
+          label="Text to speech"
+          hint="Read aloud buttons on lessons, quizzes, and missions"
+          value={prefs.tts}
+          onChange={(v) => {
+            void updatePrefs({ tts: v, voiceNav: v ? prefs.voiceNav : false });
+          }}
         />
         <ToggleRow
           label="Voice navigation"
-          value={prefs.voiceNav}
-          onChange={(v) => updatePrefs({ voiceNav: v })}
+          hint="Auto-announce screens when you open them (needs text to speech)"
+          value={prefs.voiceNav && prefs.tts}
+          onChange={(v) => {
+            void updatePrefs({
+              voiceNav: v,
+              tts: v ? true : prefs.tts,
+            });
+          }}
         />
         <Caption className="pt-1">
-          Large touch targets and screen-reader labels are always on. Large fonts and contrast
-          apply across the app.
+          For spoken Q&amp;A, open the Voice assistant from Home.
         </Caption>
       </Section>
 
-      <Section title="Voice Settings">
+      <Section title="Reminders & email">
         <ToggleRow
-          label="Text-to-Speech"
-          value={prefs.tts}
-          onChange={(v) => updatePrefs({ tts: v })}
-        />
-        <ToggleRow
-          label="Speech-to-Text"
-          value={prefs.stt}
-          onChange={(v) => updatePrefs({ stt: v })}
-        />
-        <Caption className="pt-1">
-          Text-to-Speech reads lessons, quizzes, missions, and home updates aloud for visually
-          impaired users. Turn on Voice navigation to auto-announce screens when you open them.
-        </Caption>
-      </Section>
-
-      <Section title="Preferences">
-        <Row label="Language" value="English (Ghana)" />
-        <ToggleRow
-          label="Notifications"
+          label="In-app notifications"
+          hint="Mission and event alerts inside GreenPath"
           value={prefs.notifications}
-          onChange={(v) => updatePrefs({ notifications: v })}
+          onChange={(v) => {
+            void updatePrefs({ notifications: v });
+          }}
         />
-        <Row label="Privacy" value="Manage" />
+        <ToggleRow
+          label="Email digests"
+          hint="Streak and weekly climate updates to your signup email"
+          value={prefs.emailNotifications}
+          onChange={(v) => {
+            void updatePrefs({ emailNotifications: v });
+          }}
+        />
       </Section>
+
+      <Card className="gap-2">
+        <Label className="font-sans-semibold">Coming later</Label>
+        <Body>
+          Dark mode, large fonts, and high contrast themes will use the GreenPath design system —
+          not a separate CSS override.
+        </Body>
+      </Card>
     </Screen>
   );
 }
@@ -92,32 +107,29 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 
 function ToggleRow({
   label,
+  hint,
   value,
   onChange,
 }: {
   label: string;
+  hint?: string;
   value: boolean;
   onChange: (v: boolean) => void;
 }) {
   return (
-    <View className="h-12 flex-row items-center justify-between">
-      <Text className="font-sans text-body text-ink">{label}</Text>
+    <View className="min-h-12 flex-row items-center justify-between gap-3 py-2">
+      <View className="min-w-0 flex-1 gap-0.5">
+        <Text className="font-sans text-body text-ink">{label}</Text>
+        {hint ? <Caption numberOfLines={2}>{hint}</Caption> : null}
+      </View>
       <Switch
         value={value}
         onValueChange={onChange}
         trackColor={{ false: colors.line.DEFAULT, true: colors.primary[300] }}
         thumbColor={value ? colors.primary.DEFAULT : '#f4f4f5'}
         accessibilityLabel={label}
+        accessibilityHint={hint}
       />
-    </View>
-  );
-}
-
-function Row({ label, value }: { label: string; value: string }) {
-  return (
-    <View className="h-12 flex-row items-center justify-between">
-      <Text className="font-sans text-body text-ink">{label}</Text>
-      <Text className="font-sans-medium text-label text-subtle">{value}</Text>
     </View>
   );
 }

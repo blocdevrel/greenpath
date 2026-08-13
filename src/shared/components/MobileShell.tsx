@@ -21,9 +21,13 @@ export function useShellWidth() {
 /**
  * Keeps the whole UI at mobile size on desktop web.
  * Native apps pass children through unchanged.
+ *
+ * On web, height comes from the document chain (`100dvh` + resizes-content).
+ * Do not pin or freeze shell height from visualViewport — that fights the soft
+ * keyboard and steals focus from auth inputs on mobile browsers.
  */
 export function MobileShell({ children }: { children: React.ReactNode }) {
-  const { width, height } = useWindowDimensions();
+  const { width } = useWindowDimensions();
 
   const shellWidth = useMemo(
     () => Math.min(width, MOBILE_MAX_WIDTH),
@@ -39,9 +43,9 @@ export function MobileShell({ children }: { children: React.ReactNode }) {
       style={{
         flex: 1,
         width: '100%',
-        minHeight: height,
+        minHeight: 0,
         alignItems: 'center',
-        justifyContent: 'center',
+        justifyContent: 'flex-start',
         backgroundColor: colors.canvas.sunken,
       }}>
       <ShellWidthContext.Provider value={shellWidth}>
@@ -50,9 +54,7 @@ export function MobileShell({ children }: { children: React.ReactNode }) {
             flex: 1,
             width: shellWidth,
             maxWidth: MOBILE_MAX_WIDTH,
-            height: '100%',
-            maxHeight: height,
-            overflow: 'scroll',
+            minHeight: 0,
             backgroundColor: colors.canvas.DEFAULT,
             position: 'relative',
             borderLeftWidth: width > MOBILE_MAX_WIDTH ? 1 : 0,

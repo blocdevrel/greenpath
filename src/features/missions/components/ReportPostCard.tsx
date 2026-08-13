@@ -46,7 +46,7 @@ export function ReportPostCard({
         <Caption className="font-sans-semibold text-primary">{kindLabel[report.kind]}</Caption>
       </View>
 
-      <View className="w-full overflow-hidden bg-canvas-sunken" style={{ aspectRatio: 1 }}>
+      <View className="w-full overflow-hidden bg-canvas-sunken" style={{ height: 176, borderRadius: 8 }}>
         <Image
           source={report.photo}
           style={{ width: '100%', height: '100%' }}
