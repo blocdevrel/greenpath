@@ -24,10 +24,7 @@ import {
 type Turn = { id: string; role: 'user' | 'assistant'; text: string };
 type Phase = 'greeting' | 'ready' | 'listening' | 'thinking' | 'speaking' | 'error';
 
-/**
- * Lingua-style push-to-talk coach (tap to talk / tap to send).
- * OpenRouter gpt-audio — no OpenAI Realtime, no text input.
- */
+/** Push-to-talk coach via OpenRouter gpt-audio (tap to talk / tap to send). */
 export function VoiceAssistantScreen({ onClose }: { onClose: () => void }) {
   const insets = useSafeAreaInsets();
   const { profile } = useGreenPath();

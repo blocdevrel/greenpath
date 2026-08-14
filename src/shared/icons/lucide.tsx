@@ -29,8 +29,6 @@ function stroke(color: string, strokeWidth: number) {
     strokeLinejoin: 'round' as const,
   };
 }
-
-/** Lucide Zap */
 export function Zap({ size = 24, color = 'currentColor', strokeWidth = 2, ...rest }: LucideIconProps) {
   return (
     <Base size={size} {...rest}>
@@ -41,8 +39,6 @@ export function Zap({ size = 24, color = 'currentColor', strokeWidth = 2, ...res
     </Base>
   );
 }
-
-/** Lucide Trophy */
 export function Trophy({
   size = 24,
   color = 'currentColor',
@@ -66,8 +62,6 @@ export function Trophy({
     </Base>
   );
 }
-
-/** Lucide Flame */
 export function Flame({
   size = 24,
   color = 'currentColor',
@@ -83,8 +77,6 @@ export function Flame({
     </Base>
   );
 }
-
-/** Lucide Recycle */
 export function Recycle({
   size = 24,
   color = 'currentColor',
@@ -111,8 +103,6 @@ export function Recycle({
     </Base>
   );
 }
-
-/** Lucide TreePine */
 export function TreePine({
   size = 24,
   color = 'currentColor',
@@ -135,8 +125,6 @@ export function TreePine({
     </Base>
   );
 }
-
-/** Lucide Trees (simplified) */
 export function Trees({
   size = 24,
   color = 'currentColor',
@@ -156,8 +144,6 @@ export function Trees({
     </Base>
   );
 }
-
-/** Lucide Droplet */
 export function Droplet({
   size = 24,
   color = 'currentColor',
@@ -173,8 +159,6 @@ export function Droplet({
     </Base>
   );
 }
-
-/** Lucide Sprout */
 export function Sprout({
   size = 24,
   color = 'currentColor',
@@ -196,8 +180,6 @@ export function Sprout({
     </Base>
   );
 }
-
-/** Lucide Globe */
 export function Globe({
   size = 24,
   color = 'currentColor',
@@ -215,8 +197,6 @@ export function Globe({
     </Base>
   );
 }
-
-/** Lucide Turtle */
 export function Turtle({
   size = 24,
   color = 'currentColor',
@@ -236,8 +216,6 @@ export function Turtle({
     </Base>
   );
 }
-
-/** Lucide Factory */
 export function Factory({
   size = 24,
   color = 'currentColor',
@@ -253,8 +231,6 @@ export function Factory({
     </Base>
   );
 }
-
-/** Lucide Waves */
 export function Waves({
   size = 24,
   color = 'currentColor',
@@ -269,8 +245,6 @@ export function Waves({
     </Base>
   );
 }
-
-/** Lucide Trash2 */
 export function Trash2({
   size = 24,
   color = 'currentColor',

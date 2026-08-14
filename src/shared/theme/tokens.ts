@@ -60,10 +60,6 @@ export const colors = {
 
   danger: { soft: '#FEE2E2', DEFAULT: '#EF4444' },
   success: { soft: '#DCFCE7', DEFAULT: '#22C55E' },
-  /** @deprecated triage aliases kept for Badge compat during migration */
-  refer: { soft: '#FEE2E2', DEFAULT: '#EF4444' },
-  treat: { soft: '#FFFBEB', DEFAULT: '#FBBF24' },
-  watch: { soft: '#DCFCE7', DEFAULT: '#22C55E' },
 } as const;
 
 /** Weight is chosen by family name — React Native cannot synthesise weights. */
@@ -107,11 +103,3 @@ export const borderRadius = {
 
 /** Minimum comfortable touch target for accessibility, in dp. */
 export const MIN_TOUCH_TARGET = 48;
-
-export type TriageLevel = 'refer' | 'treat' | 'watch';
-
-export const triage: Record<TriageLevel, { label: string; color: string; soft: string }> = {
-  refer: { label: 'Urgent', color: colors.danger.DEFAULT, soft: colors.danger.soft },
-  treat: { label: 'In progress', color: colors.gold.DEFAULT, soft: colors.gold.soft },
-  watch: { label: 'Complete', color: colors.success.DEFAULT, soft: colors.success.soft },
-};

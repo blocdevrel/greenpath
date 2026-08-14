@@ -96,7 +96,7 @@ export type AccessibilityPrefs = {
   stt: boolean;
   voiceNav: boolean;
   notifications: boolean;
-  /** Push / in-app daily mission reminders (local until Nest column) */
+  /** Push / in-app daily mission reminders */
   dailyReminders: boolean;
   /** Maps to server `emailDigest` */
   emailNotifications: boolean;

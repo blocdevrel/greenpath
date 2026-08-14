@@ -294,9 +294,11 @@ function AppShell() {
         <Text className="text-center font-sans text-body text-subtle">
           {sessionError ?? 'Check that greenserver is running and EXPO_PUBLIC_API_URL is set.'}
         </Text>
-        <Text className="text-center font-sans text-caption text-muted">
-          API: {env.apiUrl || '(not set)'}
-        </Text>
+        {__DEV__ ? (
+          <Text className="text-center font-sans text-caption text-muted">
+            API: {env.apiUrl || '(not set)'}
+          </Text>
+        ) : null}
         <Pressable
           onPress={() => {
             hydratedForSession.current = false;
@@ -305,14 +307,16 @@ function AppShell() {
           className="h-12 items-center justify-center rounded-2xl bg-primary px-6">
           <Text className="font-sans-semibold text-body text-white">Retry</Text>
         </Pressable>
-        <Pressable
-          onPress={() => {
-            // Local-only path: finish signup interests without server sync first.
-            void setInterests(['climate']);
-          }}
-          className="h-12 items-center justify-center rounded-2xl border border-line bg-card-raised px-6">
-          <Text className="font-sans-semibold text-body text-ink">Continue offline</Text>
-        </Pressable>
+        {__DEV__ ? (
+          <Pressable
+            onPress={() => {
+              // Local-only path: finish signup interests without server sync first.
+              void setInterests(['climate']);
+            }}
+            className="h-12 items-center justify-center rounded-2xl border border-line bg-card-raised px-6">
+            <Text className="font-sans-semibold text-body text-ink">Continue offline</Text>
+          </Pressable>
+        ) : null}
         <Pressable onPress={() => void signOut()} className="h-11 items-center justify-center px-4">
           <Text className="font-sans-semibold text-body text-danger">Sign out</Text>
         </Pressable>

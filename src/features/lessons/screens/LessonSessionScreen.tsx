@@ -108,7 +108,7 @@ export function LessonSessionScreen({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [lesson.id]);
 
-  // Auto-read each lesson screen (Duolingo-style audio coach).
+  // Auto-read each lesson screen.
   useEffect(() => {
     if (phase !== 'play' || !spoken.trim()) return;
     void readAloud(spoken, { force: true });

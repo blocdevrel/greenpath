@@ -101,7 +101,7 @@ function falseTakeaways(fact: string, siblingFacts: string[]): string[] {
 }
 
 /**
- * Duolingo-style climate session:
+ * Build a climate lesson session:
  * intro → (teach fact → check that fact) × N → apply in Ghana life → wrap-up.
  * Every check is built from THIS lesson’s facts only.
  */

@@ -78,9 +78,7 @@ async function ensureMinMs(minMs: number) {
   }
 }
 
-/**
- * Start mic capture for Lingua-style push-to-talk.
- */
+/** Start mic capture for push-to-talk. */
 export async function startPushToTalk(): Promise<void> {
   const run = (async () => {
     if (Platform.OS === 'web') {

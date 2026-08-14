@@ -26,8 +26,6 @@ export function SignInScreen({
   onBack?: () => void;
   onGoSignUp: () => void;
   onForgotPassword?: () => void;
-  /** @deprecated verification stays on this screen now */
-  onNeedsVerification?: (email: string) => void;
 }) {
   const { compact } = useStableWindowHeight();
   const { isLoaded: authLoaded } = useAuth();

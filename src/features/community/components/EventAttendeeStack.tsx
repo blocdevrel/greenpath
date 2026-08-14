@@ -11,12 +11,12 @@ const PALETTE = [
   { bg: '#FCE7F3', fg: '#9D174D' },
 ] as const;
 
-const FACE_POOL: { name: string; photo: ImageSourcePropType }[] = [
-  { name: 'Ama', photo: images.avatar1 },
-  { name: 'Kwame', photo: images.avatar2 },
-  { name: 'Efua', photo: images.avatar3 },
-  { name: 'Yaw', photo: images.avatar4 },
-  { name: 'Isaac', photo: images.avatarIsaac },
+const AVATAR_POOL: ImageSourcePropType[] = [
+  images.avatar1,
+  images.avatar2,
+  images.avatar3,
+  images.avatar4,
+  images.avatarIsaac,
 ];
 
 function hashName(name: string) {
@@ -33,19 +33,18 @@ export function initialsFromName(name: string) {
 }
 
 export function faceForName(name: string): ImageSourcePropType {
-  const known = FACE_POOL.find((f) => f.name.toLowerCase() === name.trim().toLowerCase());
-  if (known) return known.photo;
-  return FACE_POOL[hashName(name) % FACE_POOL.length]!.photo;
+  return AVATAR_POOL[hashName(name) % AVATAR_POOL.length]!;
 }
 
-/** Visual stack faces when the API has a count but few/no named RSVPs yet. */
+/** Placeholder avatars when the API has a count but few/no named RSVPs yet. */
 export function previewFaces(seed: string, count: number): EventAttendee[] {
   const take = Math.min(4, Math.max(3, Math.min(count, 4)));
-  const start = hashName(seed) % FACE_POOL.length;
-  return Array.from({ length: take }, (_, i) => {
-    const face = FACE_POOL[(start + i) % FACE_POOL.length]!;
-    return { name: face.name, avatarUrl: null, photo: face.photo };
-  });
+  const start = hashName(seed) % AVATAR_POOL.length;
+  return Array.from({ length: take }, (_, i) => ({
+    name: `Attendee ${i + 1}`,
+    avatarUrl: null,
+    photo: AVATAR_POOL[(start + i) % AVATAR_POOL.length]!,
+  }));
 }
 
 export function EventFace({

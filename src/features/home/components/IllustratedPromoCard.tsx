@@ -12,7 +12,7 @@ export function promoImageHeights(width: number) {
   };
 }
 
-/** Uber-style promo tile: wide illustration, 8px corners, title + one subtitle. */
+/** Promo tile: wide illustration, title + subtitle. */
 export function IllustratedPromoCard({
   image,
   title,

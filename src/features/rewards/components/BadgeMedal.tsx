@@ -30,7 +30,7 @@ const SIZES: Record<Size, { outer: number; inner: number; icon: number; lock: nu
   lg: { outer: 76, inner: 58, icon: 28, lock: 18 },
 };
 
-/** Duolingo / Khan Academy style: circular gold medal when earned. */
+/** Circular gold medal when the badge is earned. */
 export function BadgeMedal({
   visual,
   unlocked = true,

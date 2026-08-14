@@ -44,13 +44,8 @@ export type {
   NotificationDto,
   NotificationsResponse,
 } from './social';
-export {
-  voiceChatApi,
-  createVoiceSession,
-  startVoiceAgentSession,
-  stopVoiceAgentSession,
-} from './voice';
-export type { AgentSessionResult, VoiceChatResult, VoiceSession } from './voice';
+export { voiceChatApi } from './voice';
+export type { VoiceChatResult } from './voice';
 export { learnCoachChatApi } from './learnCoach';
 export type { LearnCoachChatResult, LearnCoachHistoryMessage } from './learnCoach';
 export { prefsFromServer, prefsToServerPatch, profileFromMe, profileAvatarSource, mergeClerkIdentity, isGeneratedAvatarUrl } from './mappers';

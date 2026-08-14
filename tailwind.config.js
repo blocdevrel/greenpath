@@ -62,9 +62,6 @@ module.exports = {
 
         danger: { soft: '#FEE2E2', DEFAULT: '#EF4444' },
         success: { soft: '#DCFCE7', DEFAULT: '#22C55E' },
-        refer: { soft: '#FEE2E2', DEFAULT: '#EF4444' },
-        treat: { soft: '#FFFBEB', DEFAULT: '#FBBF24' },
-        watch: { soft: '#DCFCE7', DEFAULT: '#22C55E' },
       },
 
       fontFamily: {
